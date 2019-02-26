@@ -42,7 +42,7 @@ You can also specify the following optional configuration keys to specify how to
 * `:max-retries`: If the connection attempt fails, how many retries we want to attempt before giving up.
 * `:backoff-ms`: This is a vector in the form `[initial-delay-ms max-delay-ms multiplier]` to control the delay between each retry. The delay for nth retry will be (max (* initial-delay-ms n multiplier) max-delay-ms). If `multiplier` is not specified (or if it is `nil`), a multiplier of 2 is used. All times are in milli-seconds.
 
-Key initialization returns a map with a two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, wich is a`PubSubMQTTClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubMQTTClient` record has a key called `:conn` that is an instance of a `machine_head` MQTT client connection. You can use this value to perform calls into `machine_head` API functions directly.
+Key initialization returns a map with a two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, which is a`PubSubMQTTClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubMQTTClient` record has a key called `:conn` that is an instance of a `machine_head` MQTT client connection. You can use this value to perform calls into `machine_head` API functions directly.
 
 #### `:magnet.pubsub/amqp`
 
@@ -62,7 +62,7 @@ Again, if you need a custom SSL/TLS configuration (minimum SSL/TLS version for t
 
 You can also specify the `:max-retries` and `:backoff-ms` optional configuration keys that are available for the MQTT Integrant key.
 
-Key initialization returns a map with a two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, wich is a `PubSubAMQPClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubAMQPClient` record has a key called `:channel` that is an instance of an already opened `langohr` AMQP channel. You can use this value to perform calls into `langohr` API functions directly.
+Key initialization returns a map with a two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, which is a `PubSubAMQPClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubAMQPClient` record has a key called `:channel` that is an instance of an already opened `langohr` AMQP channel. You can use this value to perform calls into `langohr` API functions directly.
 
 #### Configuration examples
 
@@ -213,7 +213,7 @@ user> (def tag (core/subscribe! client topic {:qos 1} consuming-callback))
 user> 
 ```
 
-Once the subscriber is ready, we can publish our message. This time we tell the MQTT broker that we want to publish our message with ah QoS of 0 (the default, if not specified). Depending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few millisecods to receive the message in the consuming callback (and the delivery callback of the publisher). So we may see the output of both callbacks almost as soon as we execute the following function call:
+Once the subscriber is ready, we can publish our message. This time we tell the MQTT broker that we want to publish our message with ah QoS of 0 (the default, if not specified). Depending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few milliseconds to receive the message in the consuming callback (and the delivery callback of the publisher). So we may see the output of both callbacks almost as soon as we execute the following function call:
 
 ``` clojure
 user> (core/publish! client topic (nippy/freeze payload) {})
@@ -318,7 +318,7 @@ user> (def config {:broker-config {:host (System/getenv "AMQP_HOST")
 user> 
 ```
 
-Again, we are going to play the roles of both the publisher and the consumer in the same sample code. So we need to define a consuming callback function. In this particular example we are interested in some message metada, namely the routing key value, and the content type of the message:
+Again, we are going to play the roles of both the publisher and the consumer in the same sample code. So we need to define a consuming callback function. In this particular example we are interested in some message metadata, namely the routing key value, and the content type of the message:
 
 ``` clojure
 user> (defn consuming-callback [channel metadata ^bytes received-payload]
@@ -355,7 +355,7 @@ user> (lq/declare channel queue queue-attrs)
 user> 
 ```
 
-Next we subscribe to the queue we are interested in. When subscribing to a queue, we also need to specify the queue attributes to use (in case it hasn't been declared before, the subscriber declares it too). We are also going to specify an optional configuration setting for the consumer: `:auto-ack`, so the library automatically ACKs to the broker every received messsage:
+Next we subscribe to the queue we are interested in. When subscribing to a queue, we also need to specify the queue attributes to use (in case it hasn't been declared before, the subscriber declares it too). We are also going to specify an optional configuration setting for the consumer: `:auto-ack`, so the library automatically ACKs to the broker every received message:
 
 When we subscribe to a queue, we receive a `tag` from the broker that we later need to cancel the subscription. So keep it around. NOTICE: if there were pending, un-ACKed messages in the queue from previous attempts, we might receive them when we execute the `core/subscribe!` method call.
 
@@ -369,7 +369,7 @@ user>
 
 Once the subscriber is ready, we can publish our message. This time we tell the AMQP broker that we want to attach some metadata attributes to the message we are publishing. In particular, we state that the MIME content type of our message is `application/json`.
 
-Again, deepending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few millisecods to receive the message in the consuming callback. So we may see the output of the consuming callbacks almost as soon as we execute `core/publish!` method call:
+Again, depending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few milliseconds to receive the message in the consuming callback. So we may see the output of the consuming callbacks almost as soon as we execute `core/publish!` method call:
 
 
 ``` clojure
