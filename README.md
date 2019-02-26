@@ -140,6 +140,7 @@ user> (require '[clojure.pprint :refer [pprint]]
                '[magnet.pubsub.mqtt :as mqtt]
                '[taoensso.nippy :as nippy])
 nil
+user> 
 ```
 
 Next we define some vars to specify the topic we want to publish to/consume from, and the data to be exchanged:
@@ -155,6 +156,7 @@ user> (def payload {:unit :volts
                            {:timestamp 1549901823.023 :value 12.32}
                            {:timestamp 1549901823.212 :value 12.30}]})
 #'user/payload
+user> 
 ```
 
 Then we need to define the configuration we'll use to init the `:magnet.pubsub/mqtt` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved:
@@ -166,6 +168,7 @@ user> (def config {:broker-config {:host (System/getenv "MQTT_HOST")
                                    :password (System/getenv "MQTT_PASSWORD")}
                    :logger nil})
 #'user/config
+user> 
 ```
 
 Some MQTT brokers (like RabbitMQ with the MQTT plugin, or mosquitto) have the option to notify the publisher when the message has been delivered to at least one subscriber. If we wan to use that feature, we need to defined a callback function that will be invoked when the broker notifies us back. So let's define a delivery callback (we ignore the `token` parameter of the callback function in this example):
@@ -174,6 +177,7 @@ Some MQTT brokers (like RabbitMQ with the MQTT plugin, or mosquitto) have the op
 user> (defn delivery-callback [_]
         (println "Publisher: message delivered!"))
 #'user/delivery-callback
+user> 
 ```
 
 We are going to play the roles of both the publisher and the consumer in the same sample code. So we need to define a consuming callback function too. In this particular example, we don't care about received messages' metadata, so we ignore it:
@@ -185,6 +189,7 @@ user> (defn consuming-callback [topic _ ^bytes received-payload]
           (println "Consumer: payload follows:")
           (pprint value)))
 #'user/consuming-callback
+user> 
 ```
 
 Now that we have all pieces in place, we can init the `:magnet.pubsub/mqtt` Integrant key to get a PubSubMQTTClient. We extend the `:broker-config` key to include the delivery callback function:
@@ -197,29 +202,32 @@ user> (def mqtt (->
 #'user/mqtt
 user> (def client (:client mqtt))
 #'user/client
+user> 
 ```
 
 Next we subscribe to the topic we are interested in. We tell the MQTT broker that we want to subscribe to that topic with a QoS of 1. When we subscribe to a topic, we receive a `tag` from the broker that we later need to cancel the subscription. So keep it around:
 
 ``` clojure
 user> (def tag (core/subscribe! client topic {:qos 1} consuming-callback))
+#'user/tag
+user> 
 ```
 
 Once the subscriber is ready, we can publish our message. This time we tell the MQTT broker that we want to publish our message with ah QoS of 0 (the default, if not specified). Depending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few millisecods to receive the message in the consuming callback (and the delivery callback of the publisher). So we may see the output of both callbacks almost as soon as we execute the following function call:
 
 ``` clojure
 user> (core/publish! client topic (nippy/freeze payload) {})
+nil
 Consumer: received message from topic: sensor/825b4260-f5a6-45ed-9e27-c96358b0126f/data
 Consumer: payload follows:
 {:unit :volts
-nil
-,
  :data
  [{:timestamp 1.549901822425E9, :value 12.34}
   {:timestamp 1.549901822725E9, :value 12.29}
   {:timestamp 1.549901823023E9, :value 12.32}
   {:timestamp 1.549901823212E9, :value 12.3}]}
 Publisher: message delivered!
+user> 
 ```
 
 Now that the message has been published and consumed, we can tear everything down. First we unsubscribe from the topic:
@@ -227,6 +235,7 @@ Now that the message has been published and consumed, we can tear everything dow
 ``` clojure
 user> (core/unsubscribe! client tag)
 nil
+user> 
 ```
 
 And then halt the Integrant key to close the connection and free up resources:
@@ -236,6 +245,7 @@ user> (ig/halt-key! :magnet.pubsub/mqtt mqtt)
 #object[org.eclipse.paho.client.mqttv3.MqttClient
         "0x303efcb1"
         "org.eclipse.paho.client.mqttv3.MqttClient@303efcb1"]
+user> 
 ```
 
 #### AMQP
@@ -255,6 +265,7 @@ SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
 SLF4J: Defaulting to no-operation (NOP) logger implementation
 SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
 nil
+user> 
 ```
 
 Next we define some vars to specify the queue we want to consume from, and the data to be exchanged. The queue name will also be the routing key for the exchange we will use (see later):
@@ -270,6 +281,7 @@ user> (def payload {:unit :volts
                            {:timestamp 1549901823.023 :value 12.32}
                            {:timestamp 1549901823.212 :value 12.30}]})
 #'user/payload
+user> 
 ```
 
 We use the default direct exchange that is always available in AMQP brokers (unnamed, referred to as an empty string)
@@ -277,6 +289,7 @@ We use the default direct exchange that is always available in AMQP brokers (unn
 ``` clojure
 user> (def exchange "")
 #'user/exchange
+user> 
 ```
 
 and define the attributes of the queue that we want to use, to be able to declare it. This can be done either in the publisher, the subscriber or the broker itself, but it is important to use the same attributes in all places.
@@ -288,6 +301,7 @@ Let's create a durable queue that is not deleted when the publishers and subscri
 ``` clojure
 user> (def queue-attrs {:durable true :auto-delete false})
 #'user/queue-attrs
+user> 
 ```
 
 Then we need to define the configuration we'll use to init the `:magnet.pubsub/amqp` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved:
@@ -301,6 +315,7 @@ user> (def config {:broker-config {:host (System/getenv "AMQP_HOST")
                                    :password (System/getenv "AMQP_PASSWORD")}
                     :logger nil})
 #'user/config
+user> 
 ```
 
 Again, we are going to play the roles of both the publisher and the consumer in the same sample code. So we need to define a consuming callback function. In this particular example we are interested in some message metada, namely the routing key value, and the content type of the message:
@@ -313,6 +328,7 @@ user> (defn consuming-callback [channel metadata ^bytes received-payload]
           (println (format "Consumer: decoded payload follows (with Content-Type: %s)" content-type))
           (pprint value)))
 #'user/consuming-callback
+user> 
 ```
 
 Now that we have all pieces in place, we can init the `:magnet.pubsub/amqp` Integrant key to get a PubSubAMQPClient:
@@ -322,6 +338,7 @@ user> (def amqp (ig/init-key :magnet.pubsub/amqp config))
 #'user/amqp
 user> (def client (:client amqp))
 #'user/client
+user> 
 ```
 
 To declare the queue in our publisher (so we don't need to do it in the AMQP broker beforehand) we need to use the channel we created when we connected to the broker. So retrieve it from the PubSubAMQPClient record and declare the queue:
@@ -335,6 +352,7 @@ user> (lq/declare channel queue queue-attrs)
  :consumer_count 0,
  :message-count 0,
  :consumer-count 0}
+user> 
 ```
 
 Next we subscribe to the queue we are interested in. When subscribing to a queue, we also need to specify the queue attributes to use (in case it hasn't been declared before, the subscriber declares it too). We are also going to specify an optional configuration setting for the consumer: `:auto-ack`, so the library automatically ACKs to the broker every received messsage:
@@ -346,6 +364,7 @@ user> (def subscribe-opts {:queue-attrs queue-attrs :consumer-opts {:auto-ack tr
 #'user/subscribe-opts
 user> (def tag (core/subscribe! client queue subscribe-opts consuming-callback))
 #'user/tag
+user> 
 ```
 
 Once the subscriber is ready, we can publish our message. This time we tell the AMQP broker that we want to attach some metadata attributes to the message we are publishing. In particular, we state that the MIME content type of our message is `application/json`.
@@ -358,7 +377,6 @@ user> (let [payload (byte-array (map (comp byte int) (json/write-str payload)))
             publish-opts {:content-type "application/json"}
             routing-key queue]
         (core/publish! client {:exchange exchange :routing-key queue} payload publish-opts))
-
 nil
 Consumer: received message with routing-key: sensor.825b4260-f5a6-45ed-9e27-c96358b0126f.data
 Consumer: decoded payload follows (with Content-Type: application/json)
@@ -368,6 +386,7 @@ Consumer: decoded payload follows (with Content-Type: application/json)
   {"timestamp" 1.549901822725E9, "value" 12.29}
   {"timestamp" 1.549901823023E9, "value" 12.32}
   {"timestamp" 1.549901823212E9, "value" 12.3}]}
+user> 
 ```
 
 Now that the message has been published and consumed, we can tear everything down. We unsubscribe from the queue (using the tag) and and then halt the Integrant key to close the connection and free up resources:
@@ -378,6 +397,7 @@ user> (core/unsubscribe! client tag)
 nil
 user> (ig/halt-key! :magnet.pubsub/amqp amqp)
 nil
+user> 
 ```
 
 ## License
