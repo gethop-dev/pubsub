@@ -25,24 +25,24 @@ This key expects a configuration map that includes several mandatory configurati
   * `:port`: The port where the MQTT broker accepts connections for the configured transport protocol. This key is OPTIONAL and defaults to the standard MQTT port for the configured `:transport`.
   * `:username`: If the MQTT broker requires authentication, this is the username to connect with. This key is OPTIONAL, and the default value is an empty username.
   * `:password`: If the MQTT broker requires authentication, this is the password to connect with. This key is OPTIONAL, and the default value is an empty password.
-  * `:opts`: [clojurewerkz.machine-head.client/connect](https://github.com/clojurewerkz/machine_head/blob/master/src/clojure/clojurewerkz/machine_head/client.clj) accepts special MQTT connect options like `:auto-reconnect`, `:connection-timeout`, etc. If you need/want to use any of these options, you can specify them here as a map. This key is OPTIONAL.
+  * `:opts`: [clojurewerkz.machine-head.client/connect](https://github.com/clojurewerkz/machine_head/blob/master/src/clojure/clojurewerkz/machine_head/client.clj) accepts special MQTT connection options like `:auto-reconnect`, `:connection-timeout`, etc. If you need/want to use any of these options, you can specify them here as a map. This key is OPTIONAL.
 * `:logger`: usually a reference to `:duct/logger` key. But you can use any Integrant key derived from `:duct/logger` (such as `:duct.logger/timbre`).
 
 If you need a custom SSL/TLS configuration (minimum SSL/TLS version for the connection, non-standard SSL/TLS port, custom CA certificates, client certificates, etc.) you can specify the following optional configuration key:
 
-* `:ssl-config`: The value of this key is a map with the following optional configuration keys:
+* `:ssl-config`: The value of this key is a map with the following configuration keys (all of them are OPTIONAL):
   * `:tls-version`: A string with a valid SSL/TLS version to use for the SSL connection. The default is "TLSv1.2". Other valid values can be found at https://docs.oracle.com/javase/8/docs/technotes/guides/security/StandardNames.html#SSLContext
-  * `:ca-crt-file`: Path to a file with a custom Certification Authority (CA) certificate (or certificate bundle, with a full certification chain), in PEM format, used to validate the MQTT broker certificate.
+  * `:ca-crt-file`: Path to a file with a custom Certification Authority (CA) certificate in PEM format (or a certificate bundle in PEM format, with a full certification chain), used to validate the MQTT broker certificate.
   * `:crt-file`: Path to a file with the client certificate, in PEM format.
   * `:key-file`: Path to a file with the client private key, in PEM format.
-  * `:key-password`: Password use to decrypt the client private key, if it is encrypted.
+  * `:key-password`: Password used to decrypt the client private key, if it is encrypted.
 
-You can also specify the following optional configuration keys to specify how to handle connection attempts to the broker:
+You can also configure the following optional configuration keys to specify how to handle connection attempts to the broker:
 
 * `:max-retries`: If the connection attempt fails, how many retries we want to attempt before giving up.
-* `:backoff-ms`: This is a vector in the form `[initial-delay-ms max-delay-ms multiplier]` to control the delay between each retry. The delay for nth retry will be (max (* initial-delay-ms n multiplier) max-delay-ms). If `multiplier` is not specified (or if it is `nil`), a multiplier of 2 is used. All times are in milli-seconds.
+* `:backoff-ms`: This is a vector in the form `[initial-delay-ms max-delay-ms multiplier]` to control the delay between each retry. The delay for nth retry will be `(max (* initial-delay-ms n multiplier) max-delay-ms)`. If `multiplier` is not specified (or if it is `nil`), a multiplier of 2 is used. All times are in milli-seconds.
 
-Key initialization returns a map with a two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, which is a`PubSubMQTTClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubMQTTClient` record has a key called `:conn` that is an instance of a `machine_head` MQTT client connection. You can use this value to perform calls into `machine_head` API functions directly.
+Key initialization returns a map with two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, which is a `PubSubMQTTClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubMQTTClient` record has a key called `:conn` that is an instance of a `machine_head` MQTT client connection. You can use this value to perform calls into the `machine_head` library functions directly.
 
 #### `:magnet.pubsub/amqp`
 
@@ -51,8 +51,8 @@ This key expects a configuration map that includes several mandatory configurati
 * `:broker-config`: the value of this key is a map with the following keys:
   * `:transport`: The type of transport protocol used to connect to the AMQP broker. The only supported values are `:tcp` and `:ssl`. This key is OPTIONAL, and defaults to `:ssl`.
   * `:host`: The hostname or IP address of the AMQP broker. This key is MANDATORY.
-  * `:port`: The port where the AMQP broker accepts connections for the configured transport protocol. This key is OPTIONAL and defaults to the standard AMQP SSL/TLS port.
-  * `:vhost`: Virtual host of the AMQP broker to connect to (in case the broker supports virtual hosts). This key is OPTIONAL.
+  * `:port`: The port where the AMQP broker accepts connections for the configured transport protocol. This key is OPTIONAL and defaults to the standard AMQP SSL/TLS port for the configured `:transport`.
+  * `:vhost`: Virtual host of the AMQP broker to connect to (in case the broker supports virtual hosts). This key is OPTIONAL, and defaults to a virtual host called `/`.
   * `:username`: If the AMQP broker requires authentication, this is the username to connect with. This key is OPTIONAL, and the default value is an empty username.
   * `:password`: If the AMQP broker requires authentication, this is the password to connect with. This key is OPTIONAL, and the default value is an empty password.
   * `:opts`: [langohr.core/connect](https://github.com/michaelklishin/langohr/blob/master/src/clojure/langohr/core.clj) accepts special [AMQP connect options](http://clojurerabbitmq.info/articles/connecting.html#using-a-map-of-parameters) like `:requested-heartbeat`, `:connection-timeout`, etc. If you need/want to use any of these options, you can specify them here as a map. This key is OPTIONAL.
@@ -62,7 +62,7 @@ Again, if you need a custom SSL/TLS configuration (minimum SSL/TLS version for t
 
 You can also specify the `:max-retries` and `:backoff-ms` optional configuration keys that are available for the MQTT Integrant key.
 
-Key initialization returns a map with a two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, which is a `PubSubAMQPClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubAMQPClient` record has a key called `:channel` that is an instance of an already opened `langohr` AMQP channel. You can use this value to perform calls into `langohr` API functions directly.
+Key initialization returns a map with two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, which is a `PubSubAMQPClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubAMQPClient` record has a key called `:channel` that is an instance of an already opened `langohr` AMQP channel. You can use this value to perform calls into the `langohr` library functions directly.
 
 #### Configuration examples
 
@@ -159,7 +159,7 @@ user> (def payload {:unit :volts
 user> 
 ```
 
-Then we need to define the configuration we'll use to init the `:magnet.pubsub/mqtt` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved:
+Then we need to define the configuration we'll use to initialize the `:magnet.pubsub/mqtt` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved, and we need to provide a username and password:
 
 ``` clojure
 user> (def config {:broker-config {:host (System/getenv "MQTT_HOST")
@@ -171,7 +171,7 @@ user> (def config {:broker-config {:host (System/getenv "MQTT_HOST")
 user> 
 ```
 
-Some MQTT brokers (like RabbitMQ with the MQTT plugin, or mosquitto) have the option to notify the publisher when the message has been delivered to at least one subscriber. If we wan to use that feature, we need to defined a callback function that will be invoked when the broker notifies us back. So let's define a delivery callback (we ignore the `token` parameter of the callback function in this example):
+Some MQTT brokers (like RabbitMQ with the MQTT plugin, or mosquitto) have the option to notify the publisher when the message has been delivered to at least one subscriber. If we want to use that feature, we need to define a callback function that will be invoked when the broker notifies us back. So let's define a delivery callback (we'll ignore the `token` parameter of the callback function in this example):
 
 ``` clojure
 user> (defn delivery-callback [_]
@@ -192,7 +192,7 @@ user> (defn consuming-callback [topic _ ^bytes received-payload]
 user> 
 ```
 
-Now that we have all pieces in place, we can init the `:magnet.pubsub/mqtt` Integrant key to get a PubSubMQTTClient. We extend the `:broker-config` key to include the delivery callback function:
+Now that we have all pieces in place, we can initialize the `:magnet.pubsub/mqtt` Integrant key to get a PubSubMQTTClient record. We extend `:broker-config` to include the optional delivery callback function:
 
 ``` clojure
 user> (def mqtt (->
@@ -205,7 +205,7 @@ user> (def client (:client mqtt))
 user> 
 ```
 
-Next we subscribe to the topic we are interested in. We tell the MQTT broker that we want to subscribe to that topic with a QoS of 1. When we subscribe to a topic, we receive a `tag` from the broker that we later need to cancel the subscription. So keep it around:
+Next we subscribe to the topic we are interested in. We tell the MQTT broker that we want to subscribe to that topic with a QoS of 1. When we subscribe to a topic, we receive a `tag` from the broker. We need that tag later to cancel the subscription. So store it:
 
 ``` clojure
 user> (def tag (core/subscribe! client topic {:qos 1} consuming-callback))
@@ -213,7 +213,7 @@ user> (def tag (core/subscribe! client topic {:qos 1} consuming-callback))
 user> 
 ```
 
-Once the subscriber is ready, we can publish our message. This time we tell the MQTT broker that we want to publish our message with ah QoS of 0 (the default, if not specified). Depending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few milliseconds to receive the message in the consuming callback (and the delivery callback of the publisher). So we may see the output of both callbacks almost as soon as we execute the following function call:
+Once the subscriber is ready, we can publish our message. This time we tell the MQTT broker that we want to publish our message with a QoS of 0 (the default, if not specified). Depending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few milliseconds to receive the message in the consuming callback (and the delivery callback of the publisher). So we may see the output of both callbacks almost as soon as we execute the following function call:
 
 ``` clojure
 user> (core/publish! client topic (nippy/freeze payload) {})
@@ -238,7 +238,7 @@ nil
 user> 
 ```
 
-And then halt the Integrant key to close the connection and free up resources:
+And then we halt the Integrant key to close the connection and free up resources:
 
 ``` clojure
 user> (ig/halt-key! :magnet.pubsub/mqtt mqtt)
@@ -250,7 +250,7 @@ user>
 
 #### AMQP
 
-In this example we publish some structured Clojure data as JSON, serialized to a byte array using (again AMQP only deals with streams of bytes). The idea is the publisher is our Clojure application, but the consumer is implemented in some other technology and can only consume JSON data.
+In this example we publish some structured Clojure data as JSON, serialized to a byte array (again AMQP only deals with streams of bytes). The idea is that the publisher is our Clojure application, but the consumer is implemented in some other technology and can only consume JSON data.
 
 Again we first require all the relevant namespaces:
 
@@ -292,7 +292,7 @@ user> (def exchange "")
 user> 
 ```
 
-and define the attributes of the queue that we want to use, to be able to declare it. This can be done either in the publisher, the subscriber or the broker itself, but it is important to use the same attributes in all places.
+and define the attributes of the queue that we want to use, to be able to declare it. Declaration can be done either in the publisher, the subscriber or the broker itself, but it is important to use the same attributes in all places.
 
 Declaring a queue will cause it to be created if it does not already exist. The declaration will have no effect if the queue does already exist and its attributes are the same as those in the declaration. When the existing queue attributes are not the same as those in the declaration a channel-level exception is raised.
 
@@ -304,7 +304,7 @@ user> (def queue-attrs {:durable true :auto-delete false})
 user> 
 ```
 
-Then we need to define the configuration we'll use to init the `:magnet.pubsub/amqp` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved:
+Then we need to define the configuration we'll use to initialize the `:magnet.pubsub/amqp` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved, and we need to provide a username and password:
 
 
 ``` clojure
@@ -318,7 +318,7 @@ user> (def config {:broker-config {:host (System/getenv "AMQP_HOST")
 user> 
 ```
 
-Again, we are going to play the roles of both the publisher and the consumer in the same sample code. So we need to define a consuming callback function. In this particular example we are interested in some message metadata, namely the routing key value, and the content type of the message:
+Again, we are going to play the roles of both the publisher and the consumer in the same sample code. So we need to define a consuming callback function. In this particular example we are interested in some message metadata, namely the routing key value and the MIME content type of the message:
 
 ``` clojure
 user> (defn consuming-callback [channel metadata ^bytes received-payload]
@@ -331,7 +331,7 @@ user> (defn consuming-callback [channel metadata ^bytes received-payload]
 user> 
 ```
 
-Now that we have all pieces in place, we can init the `:magnet.pubsub/amqp` Integrant key to get a PubSubAMQPClient:
+Now that we have all pieces in place, we can initialize the `:magnet.pubsub/amqp` Integrant key to get a PubSubAMQPClient record:
 
 ``` clojure
 user> (def amqp (ig/init-key :magnet.pubsub/amqp config))
@@ -341,7 +341,7 @@ user> (def client (:client amqp))
 user> 
 ```
 
-To declare the queue in our publisher (so we don't need to do it in the AMQP broker beforehand) we need to use the channel we created when we connected to the broker. So retrieve it from the PubSubAMQPClient record and declare the queue:
+To declare the queue in our publisher (so we don't need to do it in the AMQP broker beforehand) we need to use the channel that was created when we connected to the broker. So retrieve it from the PubSubAMQPClient record and declare the queue:
 
 ``` clojure
 user> (def channel (:channel client))
@@ -355,9 +355,11 @@ user> (lq/declare channel queue queue-attrs)
 user> 
 ```
 
-Next we subscribe to the queue we are interested in. When subscribing to a queue, we also need to specify the queue attributes to use (in case it hasn't been declared before, the subscriber declares it too). We are also going to specify an optional configuration setting for the consumer: `:auto-ack`, so the library automatically ACKs to the broker every received message:
+Next we subscribe to the queue we are interested in. When subscribing to a queue, we also need to specify the queue attributes to use (the subscriber declares it too, as in the general case it can't know whether it has been declared before). We are also going to specify an optional configuration setting for the consumer, `:auto-ack`, so the AMQP library automatically ACKs every received message to the broker.
 
-When we subscribe to a queue, we receive a `tag` from the broker that we later need to cancel the subscription. So keep it around. NOTICE: if there were pending, un-ACKed messages in the queue from previous attempts, we might receive them when we execute the `core/subscribe!` method call.
+When we subscribe to a queue, we receive a `tag` from the broker that we later need to cancel the subscription. So we need to remember it.
+
+NOTICE: if there were pending, un-ACKed messages in the queue from previous attempts, we might receive them when we execute the `core/subscribe!` method call.
 
 ``` clojure
 user> (def subscribe-opts {:queue-attrs queue-attrs :consumer-opts {:auto-ack true}})
@@ -369,7 +371,7 @@ user>
 
 Once the subscriber is ready, we can publish our message. This time we tell the AMQP broker that we want to attach some metadata attributes to the message we are publishing. In particular, we state that the MIME content type of our message is `application/json`.
 
-Again, depending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few milliseconds to receive the message in the consuming callback. So we may see the output of the consuming callbacks almost as soon as we execute `core/publish!` method call:
+Again, depending on the latency of the connection between the broker and the machine where we are running the example, it might take just a few milliseconds to receive the message in the consuming callback. So we may see the output of the consuming callback almost as soon as we execute `core/publish!` method call:
 
 
 ``` clojure
@@ -389,7 +391,7 @@ Consumer: decoded payload follows (with Content-Type: application/json)
 user> 
 ```
 
-Now that the message has been published and consumed, we can tear everything down. We unsubscribe from the queue (using the tag) and and then halt the Integrant key to close the connection and free up resources:
+Now that the message has been published and consumed, we can tear everything down. We unsubscribe from the queue (using the tag) and then halt the Integrant key to close the connection and free up resources:
 
 
 ``` clojure
