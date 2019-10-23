@@ -3,7 +3,7 @@
   :url "https://github.com/magnetcoop/pubsub"
   :license {:name "Mozilla Public Licence 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :min-lein-version "2.8.3"
+  :min-lein-version "2.9.0"
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [clojurewerkz/machine_head "1.0.0"]
                  [com.novemberain/langohr "5.1.0"]
