@@ -1,4 +1,6 @@
-[![Build Status](https://travis-ci.org/magnetcoop/pubsub.svg?branch=master)](https://travis-ci.org/magnetcoop/pubsub)
+[![Build Status](https://api.travis-ci.com/magnetcoop/pubsub.svg?branch=master)](https://travis-ci.com/magnetcoop/pubsub)
+[![Clojars Project](https://img.shields.io/clojars/v/magnet/pubsub.svg)](https://clojars.org/magnet/pubsub)
+
 # Duct MQTT and AMQP Publish Subscribe library
 
 An opinionated [Duct](https://github.com/duct-framework/duct) library that provides [Integrant](https://github.com/weavejester/integrant) keys for publishing and subscribing to messages using MQTT or AMQP.
