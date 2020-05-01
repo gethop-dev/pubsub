@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.3.2] - 2020-05-02
 ### Changed
 - Bumped dependencies to newer versions
 
@@ -23,7 +25,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [0.3.0] - 2019-02-26
 - Initial commit (previous versions were not publicly released)
 
-[UNRELEASED]:  https://github.com/magnetcoop/scheduling.twarc/compare/v0.3.1...HEAD
+[UNRELEASED]:  https://github.com/magnetcoop/scheduling.twarc/compare/v0.3.2...HEAD
+[0.3.2]: https://github.com/magnetcoop/scheduling.twarc/releases/tag/v0.3.2
 [0.3.1]: https://github.com/magnetcoop/scheduling.twarc/releases/tag/v0.3.1
 [0.3.0]: https://github.com/magnetcoop/scheduling.twarc/releases/tag/v0.3.0
 
