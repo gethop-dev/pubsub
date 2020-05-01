@@ -1,4 +1,4 @@
-(defproject magnet/pubsub "0.3.2"
+(defproject magnet/pubsub "0.3.3-SNAPSHOT"
   :description "Duct + Integrant library wrapping MQTT & AQMP publish/subcribe clients with a common boundary protocol"
   :url "https://github.com/magnetcoop/pubsub"
   :license {:name "Mozilla Public Licence 2.0"
