@@ -51,20 +51,16 @@
 (def ^:const default-backoff-ms
   [default-initial-delay default-max-delay 2.0])
 
-(defn- retry-policy [max-retries backoff-ms]
-  (diehard/retry-policy-from-config
-   {:max-retries max-retries
-    :backoff-ms backoff-ms}))
-
 (defn- on-retry [logger max-retries]
   (let [remaining (- max-retries diehard/*executions*)]
     (log logger :report ::retrying-connection-attempt
          {:retries-remaining remaining})))
 
-(defn- listener [logger max-retries]
-  (diehard/listeners-from-config
-   {:on-retry (fn [result-value exception-thrown]
-                (on-retry logger max-retries))}))
+(defn- retry-policy [logger max-retries backoff-ms]
+  (diehard/retry-policy-from-config
+   {:max-retries max-retries
+    :backoff-ms backoff-ms
+    :on-retry (fn [_ _] (on-retry logger max-retries))}))
 
 (defn- fallback
   "Connection attempt fallback, when retries don't succeed.
@@ -200,8 +196,7 @@
                                         (conj {:ssl-context (custom-ssl/custom-ssl-context ssl-config)})))]
     (log logger :report ::starting-connection)
     (diehard/with-retry {:retry-on Exception
-                         :listener (listener logger max-retries)
-                         :policy (retry-policy max-retries backoff-ms)
+                         :policy (retry-policy logger max-retries backoff-ms)
                          :fallback (fn [_ exception] (fallback logger exception))}
       (let [conn (rmq/connect config)
             channel (lch/open conn)]
