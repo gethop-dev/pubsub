@@ -79,7 +79,7 @@ MQTT example usage with most of the optional configuration keys, using custom CA
                    :username (System/getenv "MQTT_USERNAME")
                    :password (System/getenv "MQTT_PASSWORD")
                    :opts {:auto-reconnect true
-                          :max-inflight 5}}
+                          :keep-alive-interval 30}}
    :ssl-config {:tls-version "TLSv1.1"
                 :ca-crt-file (System/getenv "MQTT_SSL_CA_CRT_FILE")
                 :crt-file (System/getenv "MQTT_SSL_CRT_FILE")
@@ -88,7 +88,7 @@ MQTT example usage with most of the optional configuration keys, using custom CA
    :logger #ig/ref :duct/logger}
 ```
 
-MQTT example usage, for non-SSL non-authenticated connection to the broker, using standard TCP port:
+MQTT example usage, for non-SSL non-authenticated connection to the broker, using standard TCP port and default MQTT connect options:
 
 
 ``` edn
@@ -155,7 +155,9 @@ Then we need to define the configuration we'll use to initialize the `:magnet.pu
 user> (def config {:broker-config {:host (System/getenv "MQTT_HOST")
                                    :transport :ssl
                                    :username (System/getenv "MQTT_USERNAME")
-                                   :password (System/getenv "MQTT_PASSWORD")}
+                                   :password (System/getenv "MQTT_PASSWORD")
+                                   :opts {:auto-reconnect true
+                                          :keep-alive-interval 30}}
                    :logger nil})
 #'user/config
 user> 
