@@ -177,9 +177,14 @@
         port (or port (if (= transport :ssl) default-ssl-port default-tcp-port))
         broker-url (format "%s://%s:%s" (name transport) host port)
         conn-opts (cond-> opts
-                    username (conj {:username username})
-                    password (conj {:password password})
-                    (= transport :ssl) (conj {:socket-factory (ssl/custom-ssl-socket-factory ssl-config)}))
+                    username
+                    (conj {:username username})
+
+                    password
+                    (conj {:password password})
+
+                    (and (= transport :ssl) (seq ssl-config))
+                    (conj {:socket-factory (ssl/custom-ssl-socket-factory ssl-config)}))
         conn-config (-> (apply dissoc broker-config conn-keys)
                         (assoc :opts conn-opts))]
     (log logger :report ::starting-connection)

@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Only apply custom SSL configuration when defined. Before it was always applied when we specified that the connection used SSL, even if it was not defined. Now we only apply it when it is explicitly defined.
 
 ## [0.3.2] - 2020-05-02
 ### Changed
