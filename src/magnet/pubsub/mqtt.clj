@@ -149,8 +149,15 @@
 (s/def ::username string?)
 (s/def ::password string?)
 (s/def ::opts map?)
+(def ^:const min-client-id-bytes 1)
+(def ^:const max-client-id-bytes 23)
+(s/def ::client-id (s/and string?
+                          #(re-matches #"[0-9a-zA-Z]+" %)
+                          #(<= min-client-id-bytes
+                               (count (.getBytes % "UTF-8"))
+                               max-client-id-bytes)))
 (s/def ::broker-config (s/keys :req-un [::host]
-                               :opt-un [::transport ::port ::username ::password ::opts]))
+                               :opt-un [::transport ::port ::username ::password ::opts ::client-id]))
 (s/def ::ssl-config :magnet.pubsub.custom-ssl/ssl-config)
 (s/def ::max-retries :retry/max-retries) ;; From diehard.spec
 (s/def ::backoff-ms :retry/backoff-ms)   ;; From diehard.spec

@@ -27,6 +27,7 @@ This key expects a configuration map that includes several mandatory configurati
   * `:port`: The port where the MQTT broker accepts connections for the configured transport protocol. This key is OPTIONAL and defaults to the standard MQTT port for the configured `:transport`.
   * `:username`: If the MQTT broker requires authentication, this is the username to connect with. This key is OPTIONAL, and the default value is an empty username.
   * `:password`: If the MQTT broker requires authentication, this is the password to connect with. This key is OPTIONAL, and the default value is an empty password.
+  * `:client-id`: The client may specify its own client id when connecting to the MQTT broker. This is usually done to make it easier to setup ACL rules or to make the MQTT broker logs easier to read. This key is OPTIONAL, and the default value is a randomly generated client id.
   * `:opts`: [clojurewerkz.machine-head.client/connect](https://github.com/clojurewerkz/machine_head/blob/master/src/clojure/clojurewerkz/machine_head/client.clj) accepts special MQTT connection options like `:auto-reconnect`, `:connection-timeout`, etc. If you need/want to use any of these options, you can specify them here as a map. This key is OPTIONAL.
 * `:logger`: usually a reference to `:duct/logger` key. But you can use any Integrant key derived from `:duct/logger` (such as `:duct.logger/timbre`).
 
