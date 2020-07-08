@@ -207,7 +207,7 @@ user>
 Now that we have the PubSubMQTTClient record, we can use the generic protocol methods defined in `magnet.pubsub.core` to publish, subcribe and unsubscribe to topics. We tell the MQTT broker that we want to subscribe to the topic we are interested in, with a QoS of 1. When we subscribe to a topic, we receive a `tag` from the broker. We need that tag later to cancel the subscription. So store it:
 
 ``` clojure
-(require '[magnet.pubsub.core :as pubsub])
+user> (require '[magnet.pubsub.core :as pubsub])
 nil
 user> (def tag (pubsub/subscribe! client topic {:qos 1} consuming-callback))
 #'user/tag
