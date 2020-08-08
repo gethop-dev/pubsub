@@ -23,7 +23,8 @@
      * a map with meta-data about the message
      * the message payload (as a byte array)
 
-     Returns a subscription tag that is needed for unsubscribing.")
+     Returns a subscription tag that is needed for unsubscribing, or nil
+     if there was a problem with the subscription.")
   (unsubscribe! [this tag]
     "Unsubscribe to receive messages from the topic or queue
     associated with `tag`"))

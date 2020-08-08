@@ -82,7 +82,10 @@
               (s/valid? ::topic topic)
               (s/valid? ::payload payload)
               (s/valid? ::private-publish!-opts opts))]}
-  (mh/publish conn ^String topic payload qos retained?))
+  (try
+    (mh/publish conn ^String topic payload qos retained?)
+    (catch Exception e
+      nil)))
 
 (s/def ::private-publish!-args (s/cat :conn ::conn :topic ::topic :payload ::payload :opts ::private-publish!-opts))
 (s/fdef private-publish!
@@ -103,15 +106,19 @@
      * a map with meta-data about the message
      * the message payload (as a byte array)
 
-  Returns a subscription tag that is needed for unsubscribing."
+  Returns a subscription tag that is needed for unsubscribing, or nil
+  if there was a problem with the subscription."
   [conn topic opts callback]
   {:pre [(and (s/valid? ::conn conn)
               (s/valid? ::topic topic)
               (s/valid? ::private-subscribe!-opts opts)
               (fn? callback))]}
   (let [{:keys [qos] :or {qos default-qos}} opts]
-    (mh/subscribe conn {topic qos} callback)
-    topic))
+    (try
+      (mh/subscribe conn {topic qos} callback)
+      topic
+      (catch Exception e
+        nil))))
 
 (s/def ::private-subscribe!-args (s/cat :conn ::conn :topic ::topic :opts ::private-subscribe!-opts :callback fn?))
 (s/fdef private-subscribe!

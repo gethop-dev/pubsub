@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Fixed
 - The fix in 0.3.3 for custom SSL configurations was only applied to the MQTT implementation. The fix is now applied to the AMQP implementation too.
+- The underlying libraries can throw exceptions in the publish, subscribe, unsubscribe, etc. operations. We now catch them and return sensible values in each case.
 
 ## [0.3.3] - 2020-07-08
 ### Fixed

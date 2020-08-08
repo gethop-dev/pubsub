@@ -96,7 +96,10 @@
               (s/valid? ::payload payload)
               (s/valid? ::publish!-opts opts))]}
   (let [{:keys [exchange routing-key]} destination]
-    (lb/publish channel exchange routing-key payload opts)))
+    (try
+      (lb/publish channel exchange routing-key payload opts)
+      (catch Exception e
+        nil))))
 
 (s/def ::private-publish!-args (s/cat :channel ::channel :destination ::destination :payload ::payload :opts ::publish!-opts))
 (s/fdef private-publish!
@@ -123,14 +126,18 @@
                         `langohr.basic/consumer` documentation for the
                         list of possible keys for this key.
 
-  Returns a subscription tag that is needed for unsubscribing."
+  Returns a subscription tag that is needed for unsubscribing, or nil
+  if there was a problem with the subscription."
   [channel queue opts callback]
   {:pre [(and (s/valid? ::channel channel)
               (s/valid? ::queue queue)
               (s/valid? ::subscribe!-opts opts)
               (fn? callback))]}
-  (lq/declare channel queue (:queue-attrs opts))
-  (lc/subscribe channel queue callback (:consumer-opts opts)))
+  (try
+    (lq/declare channel queue (:queue-attrs opts))
+    (lc/subscribe channel queue callback (:consumer-opts opts))
+    (catch Exception e
+      nil)))
 
 (s/def ::private-subscribe!-args (s/cat :channel ::channel :queue ::queue :opts ::subscribe!-opts :callback fn?))
 (s/def ::private-subscribe!-ret ::tag)
