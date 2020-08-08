@@ -127,7 +127,7 @@
   (try
     (mh/unsubscribe conn tag)
     (catch Exception e
-      ;; The tag is invalid or we are not susbscribed any more, so ignore it.
+      ;; The tag is invalid or we are not subscribed any more, so ignore it.
       nil)))
 
 (s/def ::private-unsubscribe!-args (s/cat :conn ::conn :topic ::topic))
