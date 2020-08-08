@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.3.4] - 2020-08-08
 ### Fixed
 - The fix in 0.3.3 for custom SSL configurations was only applied to the MQTT implementation. The fix is now applied to the AMQP implementation too.
 - The underlying libraries can throw exceptions in the publish, subscribe, unsubscribe, etc. operations. We now catch them and return sensible values in each case.
@@ -32,7 +34,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [0.3.0] - 2019-02-26
 - Initial commit (previous versions were not publicly released)
 
-[UNRELEASED]: https://github.com/magnetcoop/pubsub/compare/v0.3.3...HEAD
+[UNRELEASED]: https://github.com/magnetcoop/pubsub/compare/v0.3.4...HEAD
+[0.3.4]: https://github.com/magnetcoop/pubsub/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/magnetcoop/pubsub/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/magnetcoop/pubsub/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/magnetcoop/pubsub/compare/v0.3.0...v0.3.1
