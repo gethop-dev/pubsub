@@ -187,13 +187,18 @@
               vhost default-vhost
               opts {}} :as config} broker-config
         config (cond-> config
-                 (nil? port) (update :port (fn [_]
-                                             (if (= transport :ssl)
-                                               default-ssl-port
-                                               default-tcp-port)))
-                 (string? port) (update :port #(Long/valueOf %))
-                 (= transport :ssl) (-> (conj {:ssl true})
-                                        (conj {:ssl-context (custom-ssl/custom-ssl-context ssl-config)})))]
+                 (nil? port)
+                 (update :port (fn [_]
+                                 (if (= transport :ssl)
+                                   default-ssl-port
+                                   default-tcp-port)))
+
+                 (string? port)
+                 (update :port #(Long/valueOf %))
+
+                 (and (= transport :ssl) (seq ssl-config))
+                 (-> (conj {:ssl true})
+                     (conj {:ssl-context (custom-ssl/custom-ssl-context ssl-config)})))]
     (log logger :report ::starting-connection)
     (diehard/with-retry {:retry-on Exception
                          :policy (retry-policy logger max-retries backoff-ms)
