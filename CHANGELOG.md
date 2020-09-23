@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Added
+- Added `ig/suspend-key!` and `ig/resume-key` Integrant keys so that we don't disconnect and reconnect when executing `(reset)` in Duct dev environments unless the configuration for the keys have changed.
 
 ## [0.3.4] - 2020-08-08
 ### Fixed

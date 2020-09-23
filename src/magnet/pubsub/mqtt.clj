@@ -210,6 +210,14 @@
 (defmethod ig/init-key :magnet.pubsub/mqtt [_ config]
   (connect config))
 
+(defmethod ig/suspend-key! :magnet.pubsub/mqtt [_ _])
+
+(defmethod ig/resume-key :magnet.pubsub/mqtt [key config old-config old-impl]
+  (if (and (:client old-impl) (= (dissoc old-config :logger) (dissoc config :logger)))
+    old-impl
+    (do (ig/halt-key! key old-impl)
+        (ig/init-key key config))))
+
 (defmethod ig/halt-key! :magnet.pubsub/mqtt [_ {:keys [client logger]}]
   (log logger :report ::releasing-connection)
   (let [conn (:conn client)]
