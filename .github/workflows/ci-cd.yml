@@ -1,0 +1,63 @@
+name: ci-cd
+on:
+  push:
+    paths-ignore:
+      - "README.md"
+      - "CONTRIBUTING.md"
+      - "CHANGELOG.md"
+      - "LICENSE"
+      - ".gitignore"
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-20.04
+    env:
+      LEIN_ROOT: "true"
+      CLOJARS_USERNAME: ${{ secrets.CLOJARS_USERNAME }}
+      CLOJARS_PASSWORD: ${{ secrets.CLOJARS_PASSWORD }}
+      AMQP_TESTS_HOST: ${{ secrets.AMQP_TESTS_HOST }}
+      AMQP_TESTS_VHOST: ${{ secrets.AMQP_TESTS_VHOST }}
+      AMQP_TESTS_PORT: ${{ secrets.AMQP_TESTS_PORT }}
+      AMQP_TESTS_SSL_PORT: ${{ secrets.AMQP_TESTS_SSL_PORT }}
+      AMQP_TESTS_SSL_TLS_VERSION: ${{ secrets.AMQP_TESTS_SSL_TLS_VERSION }}
+      AMQP_TESTS_USERNAME: ${{ secrets.AMQP_TESTS_USERNAME }}
+      AMQP_TESTS_PASSWORD: ${{ secrets.AMQP_TESTS_PASSWORD }}
+      MQTT_TESTS_HOST: ${{ secrets.MQTT_TESTS_HOST }}
+      MQTT_TESTS_PORT: ${{ secrets.MQTT_TESTS_PORT }}
+      MQTT_TESTS_SSL_PORT: ${{ secrets.MQTT_TESTS_SSL_PORT }}
+      MQTT_TESTS_SSL_TLS_VERSION: ${{ secrets.MQTT_TESTS_SSL_TLS_VERSION }}
+      MQTT_TESTS_USERNAME: ${{ secrets.MQTT_TESTS_USERNAME }}
+      MQTT_TESTS_PASSWORD: ${{ secrets.MQTT_TESTS_PASSWORD }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Install Clojure Tools
+        uses: DeLaGuardo/setup-clojure@5.1
+        with:
+          lein: 2.9.8
+
+      - name: Install clj-kondo
+        uses: DeLaGuardo/setup-clj-kondo@master
+        with:
+          version: '2020.04.05'
+
+      - name: Check formatting
+        run: lein cljfmt check
+
+      - name: Lint
+        run: clj-kondo --lint src --lint test && lein eastwood
+
+      - name: Test
+        run: lein test :all
+
+      - name: Deploy Jar to Clojars
+        if: contains(github.ref, 'refs/tags/')
+        run: lein deploy
