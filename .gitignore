@@ -12,5 +12,4 @@ pom.xml.asc
 /profiles.clj
 .idea/
 *.iml
-/.clj-kondo
 .eastwood

@@ -1,0 +1,24 @@
+{:skip-comments true
+
+ :linters
+ {:unsorted-required-namespaces
+	{:level :warning}
+
+	:unused-namespace
+	{:level :warning
+	 :exclude [dev.gethop.pubsub.mqtt dev.gethop.pubsub.amqp]}
+
+	:refer-all
+	{:exclude #{clojure.test}}
+
+	:single-key-in
+	{:level :warning}
+
+	:used-underscored-binding
+	{:level :warning}
+
+	:redundant-fn-wrapper
+	{:level :warning}
+
+	:missing-docstring
+	{:level :info}}}
