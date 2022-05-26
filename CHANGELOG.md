@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.3.6] - 2022-05-26
+### Changed
+- Moving the repository to [gethop-dev](https://github.com/gethop-dev) organization
+- CI/CD solution switch from [TravisCI](https://travis-ci.org/) to [GitHub Actions](Ihttps://github.com/features/actions)
+- `lein`, `cljfmt` and `eastwood` dependencies bump
+- Fix several `eastwood` and `clj-kondo` warnings
+- update this changelog's releases tags links
+
+### Added
+- Source code linting using [clj-kondo](https://github.com/clj-kondo/clj-kondo)
+
 ## [0.3.5] - 2020-09-23
 ### Added
 - Added `ig/suspend-key!` and `ig/resume-key` Integrant keys so that we don't disconnect and reconnect when executing `(reset)` in Duct dev environments unless the configuration for the keys have changed.
@@ -38,7 +49,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [0.3.0] - 2019-02-26
 - Initial commit (previous versions were not publicly released)
 
-[UNRELEASED]: https://github.com/gethop-dev/pubsub/compare/v0.3.5...HEAD
+[UNRELEASED]: https://github.com/gethop-dev/pubsub/compare/v0.3.6...HEAD
+[0.3.6]: https://github.com/gethop-dev/pubsub/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/gethop-dev/pubsub/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/gethop-dev/pubsub/compare/v0.3.3...v0.3.4
 [0.3.3]: https://github.com/gethop-dev/pubsub/compare/v0.3.2...v0.3.3

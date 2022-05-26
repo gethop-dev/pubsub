@@ -1,5 +1,5 @@
-[![Build Status](https://api.travis-ci.com/magnetcoop/pubsub.svg?branch=master)](https://travis-ci.com/magnetcoop/pubsub)
-[![Clojars Project](https://img.shields.io/clojars/v/magnet/pubsub.svg)](https://clojars.org/magnet/pubsub)
+[![ci-cd](https://github.com/gethop-dev/pubsub/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/gethop-dev/pubsub/actions/workflows/ci-cd.yml)
+[![Clojars Project](https://img.shields.io/clojars/v/dev.gethop/pubsub.svg)](https://clojars.org/dev.gethop/pubsub)
 
 # Duct MQTT and AMQP Publish Subscribe library
 
@@ -9,7 +9,7 @@ It wraps [machine_head](https://github.com/clojurewerkz/machine_head) and [lango
 
 ## Installation
 
-[![Clojars Project](https://clojars.org/magnet/pubsub/latest-version.svg)](https://clojars.org/magnet/pubsub)
+[![Clojars Project](https://clojars.org/dev.gethop/pubsub/latest-version.svg)](https://clojars.org/dev.gethop/pubsub)
 
 ## Usage
 
