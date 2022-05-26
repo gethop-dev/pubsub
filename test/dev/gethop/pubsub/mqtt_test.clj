@@ -2,18 +2,18 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-(ns magnet.pubsub.mqtt-test
+(ns dev.gethop.pubsub.mqtt-test
   (:require [clojure.java.io :as io]
             [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
+            [dev.gethop.pubsub.core :as core]
+            [dev.gethop.pubsub.mqtt :as mqtt]
             [duct.logger :as logger]
             [integrant.core :as ig]
-            [magnet.pubsub.core :as core]
-            [magnet.pubsub.mqtt :as mqtt]
             [taoensso.nippy :as nippy]))
 
 (defn enable-instrumentation [f]
-  (-> (stest/enumerate-namespace 'magnet.pubsub.mqtt) stest/instrument)
+  (-> (stest/enumerate-namespace 'dev.gethop.pubsub.mqtt) stest/instrument)
   (f))
 
 (use-fixtures :once enable-instrumentation)
@@ -66,14 +66,14 @@
         logger (->AtomLogger logs)
         config (-> config
                    (assoc :logger logger))]
-    (ig/init-key :magnet.pubsub/mqtt config)))
+    (ig/init-key :dev.gethop.pubsub/mqtt config)))
 
 (deftest conn-test
   (testing "TCP connection is established"
     (let [config base-config
           {:keys [client] :as mqtt} (init-key config)]
-      (is (and client (instance? magnet.pubsub.mqtt.PubSubMQTTClient client)))
-      (ig/halt-key! :magnet.pubsub/mqtt mqtt)))
+      (is (and client (instance? dev.gethop.pubsub.mqtt.PubSubMQTTClient client)))
+      (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt)))
 
   (testing "SSL connection is established"
     (let [config (-> base-config
@@ -81,8 +81,8 @@
                      (assoc-in [:broker-config :port] (:port ssl-config))
                      (assoc :ssl-config ssl-config))
           {:keys [client] :as mqtt} (init-key config)]
-      (is (and client (instance? magnet.pubsub.mqtt.PubSubMQTTClient client)))
-      (ig/halt-key! :magnet.pubsub/mqtt mqtt)))
+      (is (and client (instance? dev.gethop.pubsub.mqtt.PubSubMQTTClient client)))
+      (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt)))
 
   (testing "Connection establish attempt retries on failure"
     (let [max-retries 1    ;; It means try once and then retry once.
@@ -98,7 +98,7 @@
                   (count
                    (filter
                     #(= (nth % 4) ;; Each log's fifth element is a log info.
-                        :magnet.pubsub.mqtt/retrying-connection-attempt)
+                        :dev.gethop.pubsub.mqtt/retrying-connection-attempt)
                     @logs))))))))
 
 (deftest publish-consume-test
@@ -118,4 +118,4 @@
         (is (and (> @published-messages published-messages-before)
                  (> @consumed-messages consumed-messages-before)))
         (core/unsubscribe! client tag)
-        (ig/halt-key! :magnet.pubsub/mqtt mqtt)))))
+        (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt)))))

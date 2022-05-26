@@ -2,7 +2,7 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-(ns magnet.pubsub.custom-ssl
+(ns dev.gethop.pubsub.custom-ssl
   "Based on Java code from
   http://web.archive.org/web/20190207161102/https://gist.github.com/jimrok/d25cb45b840f5a4ad700
   and https://stackoverflow.com/a/18161536"

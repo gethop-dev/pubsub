@@ -2,19 +2,19 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-(ns magnet.pubsub.amqp-test
+(ns dev.gethop.pubsub.amqp-test
   (:require [clojure.java.io :as io]
             [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
+            [dev.gethop.pubsub.amqp :as amqp]
+            [dev.gethop.pubsub.core :as core]
             [duct.logger :as logger]
             [integrant.core :as ig]
             [langohr.queue :as lq]
-            [magnet.pubsub.amqp :as amqp]
-            [magnet.pubsub.core :as core]
             [taoensso.nippy :as nippy]))
 
 (defn enable-instrumentation [f]
-  (-> (stest/enumerate-namespace 'magnet.pubsub.amqp) stest/instrument)
+  (-> (stest/enumerate-namespace 'dev.gethop.pubsub.amqp) stest/instrument)
   (f))
 
 (use-fixtures :once enable-instrumentation)
@@ -67,14 +67,14 @@
         logger (->AtomLogger logs)
         config (-> config
                    (assoc :logger logger))]
-    (ig/init-key :magnet.pubsub/amqp config)))
+    (ig/init-key :dev.gethop.pubsub/amqp config)))
 
 (deftest conn-test
   (testing "TCP connection is established"
     (let [config base-config
           {:keys [client] :as amqp} (init-key config)]
-      (is (and client (instance? magnet.pubsub.amqp.PubSubAMQPClient client)))
-      (ig/halt-key! :magnet.pubsub/amqp amqp)))
+      (is (and client (instance? dev.gethop.pubsub.amqp.PubSubAMQPClient client)))
+      (ig/halt-key! :dev.gethop.pubsub/amqp amqp)))
 
   (testing "SSL connection is established"
     (let [config (-> base-config
@@ -82,8 +82,8 @@
                      (assoc-in [:broker-config :port] (:port ssl-config))
                      (assoc :ssl-config ssl-config))
           {:keys [client] :as amqp} (init-key config)]
-      (is (and client (instance? magnet.pubsub.amqp.PubSubAMQPClient client)))
-      (ig/halt-key! :magnet.pubsub/amqp amqp)))
+      (is (and client (instance? dev.gethop.pubsub.amqp.PubSubAMQPClient client)))
+      (ig/halt-key! :dev.gethop.pubsub/amqp amqp)))
 
   (testing "Connection establish attempt retries on failure"
     (let [max-retries 1    ;; It means try once and then retry once.
@@ -99,7 +99,7 @@
                   (count
                    (filter
                     #(= (nth % 4) ;; Each log's fifth element is a log info.
-                        :magnet.pubsub.amqp/retrying-connection-attempt)
+                        :dev.gethop.pubsub.amqp/retrying-connection-attempt)
                     @logs))))))))
 
 (deftest publish-test
@@ -118,7 +118,7 @@
             _ (Thread/sleep 250)
             status-after (lq/status channel queue)]
         (is (< (:message-count status-before) (:message-count status-after)))
-        (ig/halt-key! :magnet.pubsub/amqp amqp)))))
+        (ig/halt-key! :dev.gethop.pubsub/amqp amqp)))))
 
 (deftest subscribe-and-consume-test
   (testing "Consuming messages from a queue decreases queue's message count"
@@ -134,4 +134,4 @@
         ;; If the queue was empty, the message count remains equal!
         (is (>= (:message-count status-before) (:message-count status-after)))
         (core/unsubscribe! client tag)
-        (ig/halt-key! :magnet.pubsub/amqp amqp)))))
+        (ig/halt-key! :dev.gethop.pubsub/amqp amqp)))))

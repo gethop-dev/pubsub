@@ -15,9 +15,9 @@ It wraps [machine_head](https://github.com/clojurewerkz/machine_head) and [lango
 
 ### Configuration
 
-This library provides two Integrant keys, one for each pubsub communication protocol: `:magnet.pubsub/mqtt` and `:magnet.pubsub/amqp`
+This library provides two Integrant keys, one for each pubsub communication protocol: `:dev.gethop.pubsub/mqtt` and `:dev.gethop.pubsub/amqp`
 
-#### `:magnet.pubsub/mqtt`
+#### `:dev.gethop.pubsub/mqtt`
 
 This key expects a configuration map that includes several mandatory configuration keys, plus some optional ones. These are the mandatory keys:
 
@@ -47,7 +47,7 @@ You can also configure the following optional configuration keys to specify how 
 
 Key initialization returns a map with two keys. A key called `:logger` which holds a copy of the logger configuration setting (to be used in the `halt-key!` method). And a key called `:client`, which is a `PubSubMQTTClient` record that can be used to perform the publishing and subscribing operations described below. Also notice that the `PubSubMQTTClient` record has a key called `:conn` that is an instance of a `machine_head` MQTT client connection. You can use this value to perform calls into the `machine_head` library functions directly.
 
-#### `:magnet.pubsub/amqp`
+#### `:dev.gethop.pubsub/amqp`
 
 This key expects a configuration map that includes several mandatory configuration keys, plus some optional ones. These are the mandatory keys:
 
@@ -72,7 +72,7 @@ Key initialization returns a map with two keys. A key called `:logger` which hol
 MQTT example usage with most of the optional configuration keys, using custom CA and client certificates, custom TLS version, custom broker port, user authentication, and special connection options:
 
 ``` edn
-  :magnet.pubsub/mqtt
+  :dev.gethop.pubsub/mqtt
   {:broker-config {:transport :ssl
                    :port 32768
                    :host (System/getenv "MQTT_HOST")
@@ -93,7 +93,7 @@ MQTT example usage, for non-SSL non-authenticated connection to the broker, usin
 
 
 ``` edn
-  :magnet.pubsub/mqtt
+  :dev.gethop.pubsub/mqtt
   {:broker-config {:transport :tcp
                    :host (System/getenv "MQTT_HOST")}
    :logger #ig/ref :duct/logger}
@@ -102,7 +102,7 @@ MQTT example usage, for non-SSL non-authenticated connection to the broker, usin
 AMQP example usage with most of the optional configuration keys, using custom CA and client certificates, custom TLS version, custom broker port, user authentication, and special connection options:
 
 ``` edn
-  :magnet.pubsub/amqp
+  :dev.gethop.pubsub/amqp
   {:broker-config {:transport :ssl
                    :port 32768
                    :host (System/getenv "AMQP_HOST")
@@ -122,7 +122,7 @@ AMQP example usage with most of the optional configuration keys, using custom CA
 AMQP example usage, for non-SSL non-authenticated connection to the broker, using standard TCP port and virtual host:
 
 ``` edn
-  :magnet.pubsub/amqp
+  :dev.gethop.pubsub/amqp
   {:broker-config {:transport :tcp
                    :host (System/getenv "AMQP_HOST")}}
    :logger #ig/ref :duct/logger}
@@ -150,7 +150,7 @@ user> (def payload {:unit :volts
 user> 
 ```
 
-Then we need to define the configuration we'll use to initialize the `:magnet.pubsub/mqtt` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved, and we need to provide a username and password:
+Then we need to define the configuration we'll use to initialize the `:dev.gethop.pubsub/mqtt` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved, and we need to provide a username and password:
 
 ``` clojure
 user> (def config {:broker-config {:host (System/getenv "MQTT_HOST")
@@ -188,26 +188,26 @@ user> (defn consuming-callback [topic _ ^bytes received-payload]
 user> 
 ```
 
-Now that we have all pieces in place, we can initialize the `:magnet.pubsub/mqtt` Integrant key to get a PubSubMQTTClient record. We extend `:broker-config` to include the optional delivery callback function:
+Now that we have all pieces in place, we can initialize the `:dev.gethop.pubsub/mqtt` Integrant key to get a PubSubMQTTClient record. We extend `:broker-config` to include the optional delivery callback function:
 
 ``` clojure
-user> (require '[integrant.core :as ig]
-               '[magnet.pubsub.mqtt :as mqtt])
+user> (require '[dev.gethop.pubsub.mqtt :as mqtt]
+               '[integrant.core :as ig])
 nil
 user> (def mqtt (->
                    config
                    (assoc-in [:broker-config :on-delivery-complete] delivery-callback)
-                   (->> (ig/init-key :magnet.pubsub/mqtt))))
+                   (->> (ig/init-key :dev.gethop.pubsub/mqtt))))
 #'user/mqtt
 user> (def client (:client mqtt))
 #'user/client
 user> 
 ```
 
-Now that we have the PubSubMQTTClient record, we can use the generic protocol methods defined in `magnet.pubsub.core` to publish, subcribe and unsubscribe to topics. We tell the MQTT broker that we want to subscribe to the topic we are interested in, with a QoS of 1. When we subscribe to a topic, we receive a `tag` from the broker. We need that tag later to cancel the subscription. So store it:
+Now that we have the PubSubMQTTClient record, we can use the generic protocol methods defined in `dev.gethop.pubsub.core` to publish, subcribe and unsubscribe to topics. We tell the MQTT broker that we want to subscribe to the topic we are interested in, with a QoS of 1. When we subscribe to a topic, we receive a `tag` from the broker. We need that tag later to cancel the subscription. So store it:
 
 ``` clojure
-user> (require '[magnet.pubsub.core :as pubsub])
+user> (require '[dev.gethop.pubsub.core :as pubsub])
 nil
 user> (def tag (pubsub/subscribe! client topic {:qos 1} consuming-callback))
 #'user/tag
@@ -242,7 +242,7 @@ user>
 And then we halt the Integrant key to close the connection and free up resources:
 
 ``` clojure
-user> (ig/halt-key! :magnet.pubsub/mqtt mqtt)
+user> (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt)
 #object[org.eclipse.paho.client.mqttv3.MqttClient
         "0x303efcb1"
         "org.eclipse.paho.client.mqttv3.MqttClient@303efcb1"]
@@ -258,10 +258,10 @@ Again we first require all the relevant namespaces:
 ``` clojure
 user> (require '[clojure.data.json :as json]
                '[clojure.pprint :refer [pprint]]
+               '[dev.gethop.pubsub.amqp :as amqp]
+               '[dev.gethop.pubsub.core :as pubsub]
                '[integrant.core :as ig]
-               '[langohr.queue :as lq]
-               '[magnet.pubsub.core :as pubsub]
-               '[magnet.pubsub.amqp :as amqp])
+               '[langohr.queue :as lq])
 SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
 SLF4J: Defaulting to no-operation (NOP) logger implementation
 SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
@@ -305,7 +305,7 @@ user> (def queue-attrs {:durable true :auto-delete false})
 user> 
 ```
 
-Then we need to define the configuration we'll use to initialize the `:magnet.pubsub/amqp` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved, and we need to provide a username and password:
+Then we need to define the configuration we'll use to initialize the `:dev.gethop.pubsub/amqp` Integrant key. We use a SSL/TLS connection to the broker, with standard CA certificates involved, and we need to provide a username and password:
 
 
 ``` clojure
@@ -335,12 +335,12 @@ user> (defn consuming-callback [channel metadata ^bytes received-payload]
 user> 
 ```
 
-Now that we have all pieces in place, we can initialize the `:magnet.pubsub/amqp` Integrant key to get a PubSubAMQPClient record:
+Now that we have all pieces in place, we can initialize the `:dev.gethop.pubsub/amqp` Integrant key to get a PubSubAMQPClient record:
 
 ``` clojure
 user> (require '[integrant.core :as ig])
 nil
-user> (def amqp (ig/init-key :magnet.pubsub/amqp config))
+user> (def amqp (ig/init-key :dev.gethop.pubsub/amqp config))
 #'user/amqp
 user> (def client (:client amqp))
 #'user/client
@@ -366,14 +366,14 @@ user> (lq/declare channel queue queue-attrs)
 user> 
 ```
 
-Now that we have the PubSubAMQPClient record, we can use the generic protocol methods defined in `magnet.pubsub.core` to publish, subcribe and unsubscribe to queues. So we subscribe to the queue we are interested in. When subscribing to a queue, we also need to specify the queue attributes to use (the subscriber declares the queue too, as in the general case it can't know whether it has been declared before). We are also going to specify an optional configuration setting for the consumer, `:auto-ack`, so the AMQP library automatically ACKs every received message to the broker.
+Now that we have the PubSubAMQPClient record, we can use the generic protocol methods defined in `dev.gethop.pubsub.core` to publish, subscribe and unsubscribe to the queues. So we subscribe to the queue we are interested in. When subscribing to a queue, we also need to specify the queue attributes to use (the subscriber declares the queue too, as in the general case it can't know whether it has been declared before). We are also going to specify an optional configuration setting for the consumer, `:auto-ack`, so the AMQP library automatically ACKs every received message to the broker.
 
 When we subscribe to a queue, we receive a `tag` from the broker that we later need to cancel the subscription. So we need to remember it.
 
 NOTICE: if there were pending, un-ACKed messages in the queue from previous attempts, we might receive them when we execute the `pubsub/subscribe!` method call.
 
 ``` clojure
-user> (require '[magnet.pubsub.core :as pubsub])
+user> (require '[dev.gethop.pubsub.core :as pubsub])
 nil
 user> 
 user> (def subscribe-opts {:queue-attrs queue-attrs :consumer-opts {:auto-ack true}})
@@ -411,7 +411,7 @@ Now that the message has been published and consumed, we can tear everything dow
 ``` clojure
 user> (pubsub/unsubscribe! client tag)
 nil
-user> (ig/halt-key! :magnet.pubsub/amqp amqp)
+user> (ig/halt-key! :dev.gethop.pubsub/amqp amqp)
 nil
 user> 
 ```

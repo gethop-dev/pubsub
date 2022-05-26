@@ -2,14 +2,14 @@
 ;; License, v. 2.0. If a copy of the MPL was not distributed with this
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-(ns magnet.pubsub.mqtt
+(ns dev.gethop.pubsub.mqtt
   (:require [clojure.spec.alpha :as s]
             [clojurewerkz.machine-head.client :as mh]
             [diehard.core :as diehard]
+            [dev.gethop.pubsub.core :as core]
+            [dev.gethop.pubsub.custom-ssl :as ssl]
             [duct.logger :refer [log]]
-            [integrant.core :as ig]
-            [magnet.pubsub.core :as core]
-            [magnet.pubsub.custom-ssl :as ssl])
+            [integrant.core :as ig])
   (:import [org.eclipse.paho.client.mqttv3 MqttClient]))
 
 (s/def ::qos #{0 1 2})
@@ -165,7 +165,7 @@
                                max-client-id-bytes)))
 (s/def ::broker-config (s/keys :req-un [::host]
                                :opt-un [::transport ::port ::username ::password ::opts ::client-id]))
-(s/def ::ssl-config :magnet.pubsub.custom-ssl/ssl-config)
+(s/def ::ssl-config :dev.gethop.pubsub.custom-ssl/ssl-config)
 (s/def ::max-retries :retry/max-retries) ;; From diehard.spec
 (s/def ::backoff-ms :retry/backoff-ms)   ;; From diehard.spec
 
@@ -207,18 +207,18 @@
 (s/fdef connect
   :args ::connect-args)
 
-(defmethod ig/init-key :magnet.pubsub/mqtt [_ config]
+(defmethod ig/init-key :dev.gethop.pubsub/mqtt [_ config]
   (connect config))
 
-(defmethod ig/suspend-key! :magnet.pubsub/mqtt [_ _])
+(defmethod ig/suspend-key! :dev.gethop.pubsub/mqtt [_ _])
 
-(defmethod ig/resume-key :magnet.pubsub/mqtt [key config old-config old-impl]
+(defmethod ig/resume-key :dev.gethop.pubsub/mqtt [key config old-config old-impl]
   (if (and (:client old-impl) (= (dissoc old-config :logger) (dissoc config :logger)))
     old-impl
     (do (ig/halt-key! key old-impl)
         (ig/init-key key config))))
 
-(defmethod ig/halt-key! :magnet.pubsub/mqtt [_ {:keys [client logger]}]
+(defmethod ig/halt-key! :dev.gethop.pubsub/mqtt [_ {:keys [client logger]}]
   (log logger :report ::releasing-connection)
   (let [conn (:conn client)]
     (when (and client (mh/connected? conn))
