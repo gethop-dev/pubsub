@@ -3,7 +3,7 @@
   :url "https://github.com/gethop-dev/pubsub"
   :license {:name "Mozilla Public Licence 2.0"
             :url "https://www.mozilla.org/en-US/MPL/2.0/"}
-  :min-lein-version "2.9.0"
+  :min-lein-version "2.9.8"
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [clojurewerkz/machine_head "1.0.0"]
                  [com.novemberain/langohr "5.1.0"]
@@ -25,6 +25,7 @@
    :repl {:repl-options {:host "0.0.0.0"
                          :port 4001}}
    :profiles/dev {}
-   :project/dev {:plugins [[jonase/eastwood "0.3.11"]
-                           [lein-cljfmt "0.6.7"]]
-                 :dependencies [[com.taoensso/nippy "2.14.0"]]}})
+   :project/dev {:plugins [[jonase/eastwood "1.2.3"]
+                           [lein-cljfmt "0.8.0"]]
+                 :dependencies [[com.taoensso/nippy "2.14.0"]]
+                 :eastwood {:ignored-faults {:reflection {dev.gethop.pubsub.custom-ssl [{:line 90}]}}}}})

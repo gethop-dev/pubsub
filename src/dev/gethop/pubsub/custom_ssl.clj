@@ -12,7 +12,7 @@
            [java.security.cert Certificate CertificateFactory]
            [javax.net.ssl KeyManagerFactory SSLContext TrustManagerFactory]
            [org.bouncycastle.jce.provider BouncyCastleProvider]
-           [org.bouncycastle.openssl PEMEncryptedKeyPair PEMKeyPair PEMParser]
+           [org.bouncycastle.openssl PEMEncryptedKeyPair PEMDecryptorProvider PEMKeyPair PEMParser]
            [org.bouncycastle.openssl.jcajce JcaPEMKeyConverter JcePEMDecryptorProviderBuilder]))
 
 (def ^:const default-tls-version
@@ -34,9 +34,9 @@
           (doto keystore
             (.setCertificateEntry alias cert)))
         keystore))
-    (catch java.io.FileNotFoundException e
+    (catch java.io.FileNotFoundException _
       (throw (ex-info "crt-file-not-found" {:crt-file crt-file})))
-    (catch java.security.cert.CertificateParsingException e
+    (catch java.security.cert.CertificateParsingException _
       (throw (ex-info "invalid-crt-file" {:crt-file crt-file})))))
 
 (defn- custom-trust-manager
@@ -45,7 +45,7 @@
   (when ca-crt-file
     (let [keystore (pem-crt-to-keystore ca-crt-file "ca-certificate")
           trust-manager-factory (. TrustManagerFactory getInstance "X509")]
-      (.init trust-manager-factory keystore)
+      (.init trust-manager-factory ^KeyStore keystore)
       (.getTrustManagers trust-manager-factory))))
 
 (defn- raw-key-to-private-key
@@ -58,18 +58,18 @@
       (try
         (let [decrypt-provider (-> (JcePEMDecryptorProviderBuilder.)
                                    (.build password))
-              private-keyinfo (-> (.decryptKeyPair raw-key decrypt-provider)
+              private-keyinfo (-> (.decryptKeyPair ^PEMEncryptedKeyPair raw-key ^PEMDecryptorProvider decrypt-provider)
                                   (.getPrivateKeyInfo))]
           (.getPrivateKey key-converter private-keyinfo))
-        (catch org.bouncycastle.openssl.PEMException e
+        (catch org.bouncycastle.openssl.PEMException _
           (throw (ex-info "invalid-or-missing-key-password" {:reason :invalid-password})))
-        (catch org.bouncycastle.openssl.EncryptionException e
+        (catch org.bouncycastle.openssl.EncryptionException _
           (throw (ex-info "invalid-or-missing-key-password" {:reason :invalid-password}))))
 
       (instance? PEMKeyPair raw-key)
-      (.getPrivateKey key-converter (.getPrivateKeyInfo raw-key))
+      (.getPrivateKey key-converter (.getPrivateKeyInfo ^PEMKeyPair raw-key))
 
-      true
+      :else
       (throw (ex-info "invalid-key" {:reason :invalid-key})))))
 
 (defn- pem-key-to-keystore
@@ -85,10 +85,10 @@
             raw-key (.readObject pem-parser)
             _ (.close pem-parser)
             private-key (raw-key-to-private-key raw-key password)
-            cert (.getCertificate keystore cert-alias)]
+            cert (.getCertificate ^KeyStore keystore ^String cert-alias)]
         (doto keystore
           (.setKeyEntry "private-key" private-key password (into-array Certificate [cert])))))
-    (catch java.io.FileNotFoundException e
+    (catch java.io.FileNotFoundException _
       (throw (ex-info "key-file-not-found" {:key-file key-file})))
     (catch clojure.lang.ExceptionInfo e
       (throw (ex-info "invalid-key-file" {:key-file key-file
@@ -97,7 +97,7 @@
 (defn- custom-key-manager
   "Create a custom key manager, containing the cert and private key stored in `crt-file` and `key-file`
   If the private key is encrypted, use `key-password` to decrypt it."
-  [{:keys [crt-file key-file key-password] :as ssl-config}]
+  [{:keys [crt-file key-file key-password]}]
   (when (and crt-file key-file)
     (let [keystore (pem-crt-to-keystore crt-file "certificate")
           password (char-array key-password)
@@ -122,11 +122,7 @@
   "Creata a custom SSLContext using the certificates and keys passed in.
   Use it when you need to use custom (e.g., self-signed) certificates
   for a SSL connection."
-  [{:keys [tls-version
-           ca-crt-file
-           crt-file
-           key-file
-           key-password]
+  [{:keys [tls-version]
     :or {tls-version default-tls-version} :as ssl-config}]
   (try
     (let [ssl-context (. SSLContext getInstance tls-version)
@@ -134,7 +130,7 @@
           key-manager (custom-key-manager ssl-config)]
       (.init ssl-context key-manager trust-manager nil)
       ssl-context)
-    (catch java.security.NoSuchAlgorithmException e
+    (catch java.security.NoSuchAlgorithmException _
       (throw (ex-info "invalid-tls-version" {:reason :invalid-tls-version})))))
 
 (s/def ::custom-ssl-context-args (s/cat :ssl-config ::ssl-config))
@@ -147,7 +143,7 @@
   for a SSL connection."
   [ssl-config]
   (let [ssl-context (custom-ssl-context ssl-config)]
-    (.getSocketFactory ssl-context)))
+    (.getSocketFactory ^SSLContext ssl-context)))
 
 (s/def ::custom-ssl-socket-factory-args (s/cat :ssl-config ::ssl-config))
 (s/fdef custom-ssl-socket-factory
@@ -159,7 +155,7 @@
   for a SSL connection."
   [ssl-config]
   (let [ssl-context (custom-ssl-context ssl-config)]
-    (.createSSLEngine ssl-context)))
+    (.createSSLEngine ^SSLContext ssl-context)))
 
 (s/def ::custom-ssl-engine-args (s/cat :ssl-config ::ssl-config))
 (s/fdef custom-ssl-engine

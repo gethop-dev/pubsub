@@ -3,8 +3,7 @@
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 (ns dev.gethop.pubsub.amqp-test
-  (:require [clojure.java.io :as io]
-            [clojure.spec.test.alpha :as stest]
+  (:require [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
             [dev.gethop.pubsub.amqp :as amqp]
             [dev.gethop.pubsub.core :as core]
@@ -21,7 +20,7 @@
 
 (defrecord AtomLogger [logs]
   logger/Logger
-  (-log [logger level ns-str file line id event data]
+  (-log [_ level ns-str file line _ event data]
     (swap! logs conj [level ns-str file line event data])))
 
 (def default-exchange-name
@@ -39,7 +38,7 @@
 (def payload {:unit :volts
               :data [{:timestamp 1549901822.425 :value 12.34}
                      {:timestamp 1549901822.725 :value 12.29}
-                     {:timestamp 1549901823.023 :valque 12.32}
+                     {:timestamp 1549901823.023 :value 12.32}
                      {:timestamp 1549901823.212 :value 12.30}]})
 
 (def base-config {:broker-config {:transport :tcp
@@ -57,7 +56,7 @@
                  :key-password (System/getenv "AMQP_TESTS_SSL_KEY_PASSWORD")})
 
 (defn- consuming-callback
-  [channel metadata ^bytes received-payload]
+  [_ _ ^bytes received-payload]
   (let [value (nippy/thaw received-payload)]
     (= value payload)))
 
@@ -126,8 +125,7 @@
           {:keys [client] :as amqp} (init-key config)
           channel (:channel client)]
       (lq/declare channel queue queue-attrs)
-      (let [exchange default-exchange-name
-            opts {:queue-attrs queue-attrs :consumer-opts {:auto-ack true}}
+      (let [opts {:queue-attrs queue-attrs :consumer-opts {:auto-ack true}}
             status-before (lq/status channel queue)
             tag (core/subscribe! client queue opts consuming-callback)
             status-after (lq/status channel queue)]

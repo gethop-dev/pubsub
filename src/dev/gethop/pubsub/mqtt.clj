@@ -5,12 +5,13 @@
 (ns dev.gethop.pubsub.mqtt
   (:require [clojure.spec.alpha :as s]
             [clojurewerkz.machine-head.client :as mh]
-            [diehard.core :as diehard]
             [dev.gethop.pubsub.core :as core]
             [dev.gethop.pubsub.custom-ssl :as ssl]
+            [diehard.core :as diehard]
             [duct.logger :refer [log]]
             [integrant.core :as ig])
-  (:import [org.eclipse.paho.client.mqttv3 MqttClient]))
+  (:import [java.lang Exception]
+           [org.eclipse.paho.client.mqttv3 MqttClient]))
 
 (s/def ::qos #{0 1 2})
 
@@ -61,7 +62,7 @@
     :backoff-ms backoff-ms
     :on-retry (fn [_ _] (on-retry logger max-retries))}))
 
-(defn- fallback [logger exception]
+(defn- fallback [logger ^Exception exception]
   (log logger :report ::cant-connect-mqtt-broker [(.getMessage exception)])
   {:logger logger :client nil})
 
@@ -84,7 +85,7 @@
               (s/valid? ::private-publish!-opts opts))]}
   (try
     (mh/publish conn ^String topic payload qos retained?)
-    (catch Exception e
+    (catch Exception _
       nil)))
 
 (s/def ::private-publish!-args (s/cat :conn ::conn :topic ::topic :payload ::payload :opts ::private-publish!-opts))
@@ -117,7 +118,7 @@
     (try
       (mh/subscribe conn {topic qos} callback)
       topic
-      (catch Exception e
+      (catch Exception _
         nil))))
 
 (s/def ::private-subscribe!-args (s/cat :conn ::conn :topic ::topic :opts ::private-subscribe!-opts :callback fn?))
@@ -133,7 +134,7 @@
               (s/valid? ::tag tag))]}
   (try
     (mh/unsubscribe conn tag)
-    (catch Exception e
+    (catch Exception _
       ;; The tag is invalid or we are not subscribed any more, so ignore it.
       nil)))
 
@@ -161,7 +162,7 @@
 (s/def ::client-id (s/and string?
                           #(re-matches #"[0-9a-zA-Z]+" %)
                           #(<= min-client-id-bytes
-                               (count (.getBytes % "UTF-8"))
+                               (count (.getBytes ^String % "UTF-8"))
                                max-client-id-bytes)))
 (s/def ::broker-config (s/keys :req-un [::host]
                                :opt-un [::transport ::port ::username ::password ::opts ::client-id]))
@@ -195,9 +196,10 @@
         conn-config (-> (apply dissoc broker-config conn-keys)
                         (assoc :opts conn-opts))]
     (log logger :report ::starting-connection)
-    (diehard/with-retry {:retry-on Exception
-                         :policy (retry-policy logger max-retries backoff-ms)
-                         :fallback (fn [_ exception] (fallback logger exception))}
+    (diehard/with-retry
+      {:retry-on Exception
+       :policy (retry-policy logger max-retries backoff-ms)
+       :fallback (fn [_ exception] (fallback logger exception))}
       (let [conn (mh/connect broker-url conn-config)]
         (log logger :report ::connection-started)
         {:logger logger

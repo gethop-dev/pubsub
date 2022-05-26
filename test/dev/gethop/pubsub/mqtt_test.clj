@@ -3,8 +3,7 @@
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 (ns dev.gethop.pubsub.mqtt-test
-  (:require [clojure.java.io :as io]
-            [clojure.spec.test.alpha :as stest]
+  (:require [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
             [dev.gethop.pubsub.core :as core]
             [dev.gethop.pubsub.mqtt :as mqtt]
@@ -20,7 +19,7 @@
 
 (defrecord AtomLogger [logs]
   logger/Logger
-  (-log [logger level ns-str file line id event data]
+  (-log [_ level ns-str file line _ event data]
     (swap! logs conj [level ns-str file line event data])))
 
 (def sensor-id "825b4260-f5a6-45ed-9e27-c96358b0126f")
@@ -51,13 +50,13 @@
 (def consumed-messages (atom 0))
 
 (defn- delivery-callback
-  [token]
+  [_]
   (swap! published-messages inc))
 
 (defn- consuming-callback
-  [channel metadata ^bytes consumed-payload]
+  [_ _ ^bytes consumed-payload]
   (let [value (nippy/thaw consumed-payload)]
-    (if (= value payload)
+    (when (= value payload)
       (swap! consumed-messages inc))))
 
 (defn- init-key
@@ -105,17 +104,17 @@
   (testing "Publishing and consuming messages to/from a topic"
     (let [config (-> base-config
                      (assoc-in [:broker-config :on-delivery-complete] delivery-callback))
-          {:keys [client] :as mqtt} (init-key config)]
-      (let [payload (nippy/freeze payload)
-            publish-opts {:qos 1}
-            published-messages-before @published-messages
-            subscribe-opts {:qos 1}
-            consumed-messages-before @consumed-messages
-            tag (core/subscribe! client topic subscribe-opts consuming-callback)]
-        (core/publish! client topic payload publish-opts)
-        ;; Let the broker route the messages to the consumers and receive the messages locally
-        (Thread/sleep 250)
-        (is (and (> @published-messages published-messages-before)
-                 (> @consumed-messages consumed-messages-before)))
-        (core/unsubscribe! client tag)
-        (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt)))))
+          {:keys [client] :as mqtt} (init-key config)
+          payload (nippy/freeze payload)
+          publish-opts {:qos 1}
+          published-messages-before @published-messages
+          subscribe-opts {:qos 1}
+          consumed-messages-before @consumed-messages
+          tag (core/subscribe! client topic subscribe-opts consuming-callback)]
+      (core/publish! client topic payload publish-opts)
+         ;; Let the broker route the messages to the consumers and receive the messages locally
+      (Thread/sleep 250)
+      (is (and (> @published-messages published-messages-before)
+               (> @consumed-messages consumed-messages-before)))
+      (core/unsubscribe! client tag)
+      (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt))))

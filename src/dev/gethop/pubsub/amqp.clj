@@ -13,7 +13,8 @@
             [langohr.channel :as lch]
             [langohr.consumers :as lc]
             [langohr.core :as rmq]
-            [langohr.queue :as lq]))
+            [langohr.queue :as lq])
+  (:import [java.lang Exception]))
 
 (s/def ::transport #{:tcp :ssl})
 
@@ -66,7 +67,7 @@
   "Connection attempt fallback, when retries don't succeed.
   We log the connection failure and return `nil` for the client
   key (to signal the `init-key` caller the failure)"
-  [logger exception]
+  [logger ^Exception exception]
   (log logger :report ::cant-connect-amqp-broker [(.getMessage exception)])
   {:client nil :logger logger})
 
@@ -98,7 +99,7 @@
   (let [{:keys [exchange routing-key]} destination]
     (try
       (lb/publish channel exchange routing-key payload opts)
-      (catch Exception e
+      (catch Exception _
         nil))))
 
 (s/def ::private-publish!-args (s/cat :channel ::channel :destination ::destination :payload ::payload :opts ::publish!-opts))
@@ -136,7 +137,7 @@
   (try
     (lq/declare channel queue (:queue-attrs opts))
     (lc/subscribe channel queue callback (:consumer-opts opts))
-    (catch Exception e
+    (catch Exception _
       nil)))
 
 (s/def ::private-subscribe!-args (s/cat :channel ::channel :queue ::queue :opts ::subscribe!-opts :callback fn?))
@@ -152,8 +153,8 @@
               (s/valid? ::tag tag))]}
   (try
     (lb/cancel channel tag)
-    (catch Exception e
-      ;; The tag is invalid or we are not subscribed any more, so ignore it.
+    (catch Exception _
+      ;; The tag is invalid, or we are not subscribed anymore, so ignore it.
       nil)))
 
 (s/def ::private-unsubscribe!-args (s/cat :channel ::channel :tag ::tag))
@@ -189,10 +190,8 @@
     :or {max-retries default-max-retries
          backoff-ms default-backoff-ms} :as config}]
   {:pre [(s/valid? ::config config)]}
-  (let [{:keys [transport host port vhost username password opts]
-         :or {transport default-transport
-              vhost default-vhost
-              opts {}} :as config} broker-config
+  (let [{:keys [transport port]
+         :or {transport default-transport} :as config} broker-config
         config (cond-> config
                  (nil? port)
                  (update :port (fn [_]
@@ -201,7 +200,7 @@
                                    default-tcp-port)))
 
                  (string? port)
-                 (update :port #(Long/valueOf %))
+                 (update :port #(Long/valueOf ^String %))
 
                  (and (= transport :ssl) (seq ssl-config))
                  (-> (conj {:ssl true})
