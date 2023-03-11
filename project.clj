@@ -6,12 +6,12 @@
   :min-lein-version "2.9.8"
   :dependencies [[org.clojure/clojure "1.10.0"]
                  [clojurewerkz/machine_head "1.0.0"]
-                 [com.novemberain/langohr "5.1.0"]
-                 [diehard "0.9.4"]
+                 [com.novemberain/langohr "5.4.0"]
+                 [diehard "0.11.6"]
                  [duct/logger "0.3.0"]
                  [integrant "0.8.0"]
-                 [org.bouncycastle/bcprov-jdk15on "1.65"]
-                 [org.bouncycastle/bcpkix-jdk15on "1.65"]]
+                 [org.bouncycastle/bcprov-jdk15on "1.70"]
+                 [org.bouncycastle/bcpkix-jdk15on "1.70"]]
   :deploy-repositories [["snapshots" {:url "https://clojars.org/repo"
                                       :username :env/CLOJARS_USERNAME
                                       :password :env/CLOJARS_PASSWORD
@@ -25,6 +25,6 @@
    :repl {:repl-options {:host "0.0.0.0"
                          :port 4001}}
    :profiles/dev {}
-   :project/dev {:plugins [[jonase/eastwood "1.2.3"]
-                           [lein-cljfmt "0.8.0"]]
-                 :dependencies [[com.taoensso/nippy "2.14.0"]]}})
+   :project/dev {:plugins [[jonase/eastwood "1.3.0"]
+                           [lein-cljfmt "0.9.2"]]
+                 :dependencies [[com.taoensso/nippy "3.2.0"]]}})
