@@ -27,5 +27,4 @@
    :profiles/dev {}
    :project/dev {:plugins [[jonase/eastwood "1.2.3"]
                            [lein-cljfmt "0.8.0"]]
-                 :dependencies [[com.taoensso/nippy "2.14.0"]]
-                 :eastwood {:ignored-faults {:reflection {dev.gethop.pubsub.custom-ssl [{:line 90}]}}}}})
+                 :dependencies [[com.taoensso/nippy "2.14.0"]]}})

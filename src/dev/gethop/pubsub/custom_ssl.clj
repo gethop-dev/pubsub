@@ -86,7 +86,7 @@
             _ (.close pem-parser)
             private-key (raw-key-to-private-key raw-key password)
             cert (.getCertificate ^KeyStore keystore ^String cert-alias)]
-        (doto keystore
+        (doto ^KeyStore keystore
           (.setKeyEntry "private-key" private-key password (into-array Certificate [cert])))))
     (catch java.io.FileNotFoundException _
       (throw (ex-info "key-file-not-found" {:key-file key-file})))
