@@ -162,6 +162,34 @@
 (s/fdef private-unsubscribe!
   :args ::private-unsubscribe!-args)
 
+(def ^:private listeners-mappings
+  {:shutdown-listener-fn #'rmq/add-shutdown-listener
+   :blocked-listener-fn #'rmq/add-blocked-listener
+   :recovery-listener-fn #'rmq/on-recovery
+   :queue-recovery-listener-fn #'rmq/on-queue-recovery})
+
+(s/def ::connection #(instance? com.novemberain.langohr.Connection %))
+(s/def ::shutdown-listener-fn fn?)
+(s/def ::blocked-listener-fn (s/coll-of fn? :kind vector? :count 2))
+(s/def ::recovery-listener-fn (s/coll-of fn? :kind vector? :min-count 1 :max-count 2))
+(s/def ::queue-recovery-listener-fn fn?)
+(s/def ::event-listeners (s/keys :opt-un [::shutdown-listener-fn
+                                          ::blocked-listener-fn
+                                          ::recovery-listener-fn
+                                          ::queue-recovery-listener-fn]))
+(defn- add-listeners!
+  [conn event-listeners]
+  {:pre [(and (s/valid? ::connection conn)
+              (s/valid? ::event-listeners event-listeners))]}
+  (doseq [[listener-type listener-details] event-listeners]
+    (let [listener-args (if-not (vector? listener-details)
+                          [listener-details]
+                          listener-details)]
+      (apply (get listeners-mappings listener-type) conn listener-args))))
+
+(s/def ::add-listeners!-args (s/cat :conn ::conn :event-listeners ::event-listeners))
+(s/fdef add-listeners! :args ::add-listeners!-args)
+
 (defrecord PubSubAMQPClient [conn channel]
   core/PubSubClient
   (publish! [this destination payload opts]
@@ -179,8 +207,8 @@
 (s/def ::password string?)
 (s/def ::opts map?)
 (s/def ::broker-config (s/keys :req-un [::host]
-                               :opt-un [::transport ::host ::port ::vhost
-                                        ::username ::password ::opts]))
+                               :opt-un [::transport ::host ::port ::vhost ::username
+                                        ::password ::opts ::event-listeners]))
 (s/def ::ssl-config :dev.gethop.pubsub.custom-ssl/ssl-config)
 (s/def ::max-retries :retry/max-retries) ;; From diehard.spec
 (s/def ::backoff-ms :retry/backoff-ms)   ;; From diehard.spec
@@ -193,7 +221,7 @@
     :or {max-retries default-max-retries
          backoff-ms default-backoff-ms} :as config}]
   {:pre [(s/valid? ::config config)]}
-  (let [{:keys [transport port opts]
+  (let [{:keys [transport port opts listeners]
          :or {transport default-transport
               opts {}}} broker-config
         conn-config (cond-> (into opts (select-keys broker-config [:host :port :vhost
@@ -216,6 +244,8 @@
                          :fallback (fn [_ exception] (fallback logger exception))}
       (let [conn (rmq/connect conn-config)
             channel (lch/open conn)]
+        (when (seq listeners)
+          (add-listeners! conn listeners))
         (log logger :report ::connection-started)
         {:logger logger
          :client (->PubSubAMQPClient conn channel)}))))
