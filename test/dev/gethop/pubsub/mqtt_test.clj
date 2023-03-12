@@ -3,6 +3,7 @@
 ;; file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 (ns dev.gethop.pubsub.mqtt-test
+  {:clj-kondo/config '{:linters {:missing-docstring {:level :off}}}}
   (:require [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
             [dev.gethop.pubsub.core :as core]
