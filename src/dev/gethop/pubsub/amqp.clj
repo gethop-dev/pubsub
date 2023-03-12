@@ -193,26 +193,28 @@
     :or {max-retries default-max-retries
          backoff-ms default-backoff-ms} :as config}]
   {:pre [(s/valid? ::config config)]}
-  (let [{:keys [transport port]
-         :or {transport default-transport} :as config} broker-config
-        config (cond-> config
-                 (nil? port)
-                 (update :port (fn [_]
-                                 (if (= transport :ssl)
-                                   default-ssl-port
-                                   default-tcp-port)))
+  (let [{:keys [transport port opts]
+         :or {transport default-transport
+              opts {}}} broker-config
+        conn-config (cond-> (into opts (select-keys broker-config [:host :port :vhost
+                                                                   :username :password]))
+                      (nil? port)
+                      (update :port (fn [_]
+                                      (if (= transport :ssl)
+                                        default-ssl-port
+                                        default-tcp-port)))
 
-                 (string? port)
-                 (update :port #(Long/valueOf ^String %))
+                      (string? port)
+                      (update :port #(Long/valueOf ^String %))
 
-                 (and (= transport :ssl) (seq ssl-config))
-                 (-> (conj {:ssl true})
-                     (conj {:ssl-context (custom-ssl/custom-ssl-context ssl-config)})))]
+                      (and (= transport :ssl) (seq ssl-config))
+                      (-> (conj {:ssl true})
+                          (conj {:ssl-context (custom-ssl/custom-ssl-context ssl-config)})))]
     (log logger :report ::starting-connection)
     (diehard/with-retry {:retry-on Exception
                          :policy (retry-policy logger max-retries backoff-ms)
                          :fallback (fn [_ exception] (fallback logger exception))}
-      (let [conn (rmq/connect config)
+      (let [conn (rmq/connect conn-config)
             channel (lch/open conn)]
         (log logger :report ::connection-started)
         {:logger logger

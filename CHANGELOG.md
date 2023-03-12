@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+### Fixed
+- Fixed support for :opts key in AMQP pubsub client broker configuration. README.md documented that there was an optional :opts key in the broker configuration that could be used to pass additional AMQP connection options to the underlying library. But the whole :opts key (and associated value) was passed in as another AMQP connection parameter. Which meant the underlying AMQP library completely ignored it (as it doesn't use such :opts key at all) [[Issue #6]].
+
 ### Changed
 - Bumped dependencies to newer versions
 
@@ -59,3 +62,5 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 [0.3.2]: https://github.com/gethop-dev/pubsub/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/gethop-dev/pubsub/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/gethop-dev/pubsub/releases/tag/v0.3.0
+
+[Issue #6]: https://github.com/gethop-dev/pubsub/issues/6
