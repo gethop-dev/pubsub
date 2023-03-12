@@ -16,6 +16,7 @@
            [org.bouncycastle.openssl.jcajce JcaPEMKeyConverter JcePEMDecryptorProviderBuilder]))
 
 (def ^:const default-tls-version
+  "Default TLS version to use for encrypted connections."
   "TLSv1.2")
 
 (defn- pem-crt-to-keystore

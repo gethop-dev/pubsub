@@ -49,6 +49,7 @@
   10000)
 
 (def ^:const default-backoff-ms
+  "Default backoff policy for a connection retry."
   [default-initial-delay default-max-delay 2.0])
 
 (defn- on-retry [logger max-retries]
@@ -157,8 +158,12 @@
 (s/def ::username string?)
 (s/def ::password string?)
 (s/def ::opts map?)
-(def ^:const min-client-id-bytes 1)
-(def ^:const max-client-id-bytes 23)
+(def ^:const min-client-id-bytes
+  "Minimum amount of bytes for a MQTT Client Id that a server must support."
+  1)
+(def ^:const max-client-id-bytes
+  "Maximum amount of bytes for a MQTT Client Id that a server must support."
+  23)
 (s/def ::client-id (s/and string?
                           #(re-matches #"[0-9a-zA-Z]+" %)
                           #(<= min-client-id-bytes

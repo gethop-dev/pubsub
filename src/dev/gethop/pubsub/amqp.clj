@@ -50,6 +50,7 @@
   10000)
 
 (def ^:const default-backoff-ms
+  "Default backoff policy for a connection retry."
   [default-initial-delay default-max-delay 2.0])
 
 (defn- on-retry [logger max-retries]
