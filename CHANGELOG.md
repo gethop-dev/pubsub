@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - Fixed support for :opts key in AMQP pubsub client broker configuration. README.md documented that there was an optional :opts key in the broker configuration that could be used to pass additional AMQP connection options to the underlying library. But the whole :opts key (and associated value) was passed in as another AMQP connection parameter. Which meant the underlying AMQP library completely ignored it (as it doesn't use such :opts key at all) [[Issue #6]].
+- dev.gethop.pubsub.amqp/halt-key! no longer throws an exception if the call to langohr.core/close throws (it can throw IOException under certain circumstances)
 
 ### Changed
 - Bumped dependencies to newer versions

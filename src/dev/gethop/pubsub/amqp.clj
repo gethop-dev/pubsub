@@ -267,8 +267,15 @@
 
 (defmethod ig/halt-key! :dev.gethop.pubsub/amqp [_ {:keys [client logger]}]
   (log logger :report ::releasing-connection)
-  (let [{:keys [conn channel]} client]
-    (when (and channel (rmq/open? channel))
-      (rmq/close channel))
-    (when (and conn (rmq/open? conn))
-      (rmq/close conn))))
+  (try
+    (let [{:keys [conn channel]} client]
+      (when (and channel (rmq/open? channel))
+        (rmq/close channel))
+      (when (and conn (rmq/open? conn))
+        (rmq/close conn)))
+    (catch Throwable _
+      ;; rmq/close can throw IOException if there is any I/O problem
+      ;; while closing the channel (e.g., the connection is broken,
+      ;; etc). We were closing things down anyway, so we can ignore
+      ;; any kind of problem at this stage.
+      nil)))
