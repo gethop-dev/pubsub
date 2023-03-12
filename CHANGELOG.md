@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.4.0] - 2023-03-12
 ### Added
 - Added support for AMQP event listeners to AMQP pubsub client. This could be configured by the library consumer later, once the Integrant key was initialized. But doing it as part of the Integrant key initialization is more convenient. Now this can be configured using the `:listeners` optional key, inside the `:brocker-config` key [[Issue #5]].
 
