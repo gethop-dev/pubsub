@@ -1,4 +1,4 @@
-(defproject dev.gethop/pubsub "0.4.0"
+(defproject dev.gethop/pubsub "0.4.1-SNAPSHOT"
   :description "Duct + Integrant library wrapping MQTT & AQMP publish/subcribe clients with a common boundary protocol"
   :url "https://github.com/gethop-dev/pubsub"
   :license {:name "Mozilla Public Licence 2.0"
