@@ -172,12 +172,14 @@
 
 (s/def ::host string?)
 (s/def ::port (s/or :string string? :integer integer?))
+(s/def ::vhost string?)
 (s/def ::logger #(satisfies? duct.logger/Logger %))
 (s/def ::username string?)
 (s/def ::password string?)
 (s/def ::opts map?)
 (s/def ::broker-config (s/keys :req-un [::host]
-                               :opt-un [::transport ::port ::username ::password ::opts]))
+                               :opt-un [::transport ::host ::port ::vhost
+                                        ::username ::password ::opts]))
 (s/def ::ssl-config :dev.gethop.pubsub.custom-ssl/ssl-config)
 (s/def ::max-retries :retry/max-retries) ;; From diehard.spec
 (s/def ::backoff-ms :retry/backoff-ms)   ;; From diehard.spec
