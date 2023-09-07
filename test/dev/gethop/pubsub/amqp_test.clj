@@ -77,7 +77,7 @@
           details (if reason
                     {:root-cause :amqp-method-executed
                      :amqp-method-name (-> reason .protocolMethodName)}
-                    {:root-cause (-> cause .getCause .getMessage)})]
+                    {:root-cause (ex-message cause)})]
       (logger/log (:logger config) level ::shutdown-listener details))))
 
 (defmethod prepare-listener :blocked-listener
@@ -93,7 +93,7 @@
 (defmethod prepare-listener :recovery-listener
   [config listener]
   (fn recovery-listener [^Recoverable _]
-    (logger/log (:logger config) :info (keyword *ns* (:name listener)) {})))
+    (logger/log (:logger config) :info ::recovery-listener {:listener-type (:name listener)})))
 
 (defmethod prepare-listener :queue-recovery-listener
   [config _]
