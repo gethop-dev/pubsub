@@ -7,7 +7,7 @@
   (:require [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
             [dev.gethop.pubsub.core :as core]
-            [dev.gethop.pubsub.mqtt :as mqtt]
+            [dev.gethop.pubsub.mqtt]
             [duct.logger :as logger]
             [integrant.core :as ig]
             [taoensso.nippy :as nippy]))

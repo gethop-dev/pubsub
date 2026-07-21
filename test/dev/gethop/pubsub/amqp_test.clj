@@ -6,7 +6,7 @@
   {:clj-kondo/config '{:linters {:missing-docstring {:level :off}}}}
   (:require [clojure.spec.test.alpha :as stest]
             [clojure.test :refer :all]
-            [dev.gethop.pubsub.amqp :as amqp]
+            [dev.gethop.pubsub.amqp]
             [dev.gethop.pubsub.core :as core]
             [duct.logger :as logger]
             [integrant.core :as ig]

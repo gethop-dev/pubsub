@@ -4,10 +4,6 @@
  {:unsorted-required-namespaces
   {:level :warning}
 
-  :unused-namespace
-  {:level :warning
-   :exclude [dev.gethop.pubsub.mqtt dev.gethop.pubsub.amqp]}
-
   :refer-all
   {:exclude #{clojure.test}}
 
