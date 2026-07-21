@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
+
+## [0.4.1] - 2026-07-21
 ### Changed
 - Bumped dependencies to newer versions
 
@@ -57,12 +59,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - Add Travis CI integration
-- Add deployment configuration and integration tests CI 
+- Add deployment configuration and integration tests CI
 
 ## [0.3.0] - 2019-02-26
 - Initial commit (previous versions were not publicly released)
 
-[UNRELEASED]: https://github.com/gethop-dev/pubsub/compare/v0.3.6...HEAD
+[UNRELEASED]: https://github.com/gethop-dev/pubsub/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/gethop-dev/pubsub/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/gethop-dev/pubsub/compare/v0.3.6...v0.4.0
 [0.3.6]: https://github.com/gethop-dev/pubsub/compare/v0.3.5...v0.3.6
 [0.3.5]: https://github.com/gethop-dev/pubsub/compare/v0.3.4...v0.3.5
 [0.3.4]: https://github.com/gethop-dev/pubsub/compare/v0.3.3...v0.3.4
