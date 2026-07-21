@@ -1,2 +1,3 @@
-.cache
-/rewrite-clj
+*
+!.gitignore
+!config.edn
