@@ -5,8 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.4.3] - 2026-07-24
 ### Added
 - Docker-based local development environment setup.
+
 ## [0.4.2] - 2026-07-21
 ### Changed
 - Downgraded leiningen version to 2.12.0 until the bug in the 2.13.0 installer is fixed.
@@ -70,8 +72,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/).
 ## [0.3.0] - 2019-02-26
 - Initial commit (previous versions were not publicly released)
 
-[UNRELEASED]: https://github.com/gethop-dev/pubsub/compare/v0.4.2...HEAD
-[0.4.2]: https://github.com/gethop-dev/pubsub/compare/v0.4.0...v0.4.2
+[UNRELEASED]: https://github.com/gethop-dev/pubsub/compare/v0.4.3...HEAD
+[0.4.3]: https://github.com/gethop-dev/pubsub/compare/v0.4.2...v0.4.3
+[0.4.2]: https://github.com/gethop-dev/pubsub/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/gethop-dev/pubsub/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/gethop-dev/pubsub/compare/v0.3.6...v0.4.0
 [0.3.6]: https://github.com/gethop-dev/pubsub/compare/v0.3.5...v0.3.6
