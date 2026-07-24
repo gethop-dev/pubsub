@@ -1,0 +1,66 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4.3.3-management
+    ports:
+      - 1883:1883
+      - 5671:5671
+      - 5672:5672
+      - 8883:8883
+      - 15671:15671
+      - 15672:15672
+    volumes:
+      - "./rabbitmq-cfg:/etc/rabbitmq"
+      - "./test/_files:/etc/rabbitmq/certs"
+  # mosquitto:
+  #   image: eclipse-mosquitto:1.5.6
+  #   ports:
+  #     - 1883:1883
+  #     - 8883:8883
+  #   volumes:
+  #     - ./mosquitto-cfg/mosquitto.conf:/mosquitto/config/mosquitto.conf
+  #     - ./test/_files:/mosquitto/config/certs
+  app:
+    image: local/pubsub/dev:latest
+    build:
+      context: .
+      target: "dev"
+    environment:
+      - MQTT_TESTS_HOST
+      - MQTT_TESTS_PORT
+      - MQTT_TESTS_USERNAME
+      - MQTT_TESTS_PASSWORD
+      - MQTT_TESTS_SSL_PORT
+      - MQTT_TESTS_SSL_TLS_VERSION
+      - MQTT_TESTS_PLAIN_TCP_CONNECT
+      - MQTT_TESTS_CUSTOM_SSL_CONTEXT
+      - MQTT_TESTS_SSL_CA_CRT_FILE
+      - MQTT_TESTS_SSL_CRT_FILE
+      - MQTT_TESTS_SSL_KEY_FILE
+      - MQTT_TESTS_SSL_KEY_PASSWORD
+      - AMQP_TESTS_HOST
+      - AMQP_TESTS_PORT
+      - AMQP_TESTS_VHOST
+      - AMQP_TESTS_EXCHANGE
+      - AMQP_TESTS_USERNAME
+      - AMQP_TESTS_PASSWORD
+      - AMQP_TESTS_SSL_PORT
+      - AMQP_TESTS_PLAIN_TCP_CONNECT
+      - AMQP_TESTS_SSL_TLS_VERSION
+      - AMQP_TESTS_CUSTOM_SSL_CONTEXT
+      - AMQP_TESTS_SSL_CA_CRT_FILE
+      - AMQP_TESTS_SSL_CRT_FILE
+      - AMQP_TESTS_SSL_KEY_FILE
+      - AMQP_TESTS_SSL_KEY_PASSWORD
+    command:
+      - bash
+      - -c
+      - 'env JAVA_OPTS="-Djdk.attach.allowAttachSelf -XshowSettings:vm -XX:+UnlockExperimentalVMOptions -XX:+UseContainerSupport -XX:MaxRAMPercentage=70.0 -server" lein repl :headless'
+    ports:
+      - mode: ingress
+        target: 4001
+        published: 4004
+        protocol: tcp
+    volumes:
+      - ".:/app"
+      - "~/.m2:/root/.m2"
+      - "~/.m2:/home/hop/.m2"
