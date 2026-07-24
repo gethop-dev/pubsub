@@ -39,12 +39,21 @@
                                   :username (System/getenv "MQTT_TESTS_USERNAME")
                                   :password (System/getenv "MQTT_TESTS_PASSWORD")}})
 
-(def ssl-config {:port (System/getenv "MQTT_TESTS_SSL_PORT")
-                 :tls-version (System/getenv "MQTT_TESTS_SSL_TLS_VERSION")
-                 :ca-crt-file (System/getenv "MQTT_TESTS_SSL_CA_CRT_FILE")
+(def ssl-config
+  {:port (System/getenv "MQTT_TESTS_SSL_PORT")
+   :tls-version (System/getenv "MQTT_TESTS_SSL_TLS_VERSION")
+   :custom-ssl-context? (= "true" (System/getenv "MQTT_TESTS_CUSTOM_SSL_CONTEXT"))
+   :ssl-context {:ca-crt-file (System/getenv "MQTT_TESTS_SSL_CA_CRT_FILE")
                  :crt-file (System/getenv "MQTT_TESTS_SSL_CRT_FILE")
                  :key-file (System/getenv "MQTT_TESTS_SSL_KEY_FILE")
-                 :key-password (System/getenv "MQTT_TESTS_SSL_KEY_PASSWORD")})
+                 :key-password (System/getenv "MQTT_TESTS_SSL_KEY_PASSWORD")}})
+
+(def base+ssl-config
+  (cond-> (-> base-config
+              (assoc-in [:broker-config :transport] :ssl)
+              (assoc-in [:broker-config :port] (:port ssl-config)))
+    (:custom-ssl-context? ssl-config)
+    (assoc :ssl-config (:ssl-context ssl-config))))
 
 (def published-messages (atom 0))
 
@@ -70,16 +79,15 @@
 
 (deftest conn-test
   (testing "TCP connection is established"
-    (let [config base-config
-          {:keys [client] :as mqtt} (init-key config)]
-      (is (and client (instance? dev.gethop.pubsub.mqtt.PubSubMQTTClient client)))
-      (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt)))
+    (if-not (= "true" (System/getenv "MQTT_TESTS_PLAIN_TCP_CONNECT"))
+      (println "Skipping plain TCP connection test, as configured via MQTT_TESTS_PLAIN_TCP_CONNECT.")
+      (let [config base-config
+            {:keys [client] :as mqtt} (init-key config)]
+        (is (and client (instance? dev.gethop.pubsub.mqtt.PubSubMQTTClient client)))
+        (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt))))
 
   (testing "SSL connection is established"
-    (let [config (-> base-config
-                     (assoc-in [:broker-config :transport] :ssl)
-                     (assoc-in [:broker-config :port] (:port ssl-config))
-                     (assoc :ssl-config ssl-config))
+    (let [config base+ssl-config
           {:keys [client] :as mqtt} (init-key config)]
       (is (and client (instance? dev.gethop.pubsub.mqtt.PubSubMQTTClient client)))
       (ig/halt-key! :dev.gethop.pubsub/mqtt mqtt)))
@@ -103,7 +111,7 @@
 
 (deftest publish-consume-test
   (testing "Publishing and consuming messages to/from a topic"
-    (let [config (-> base-config
+    (let [config (-> base+ssl-config
                      (assoc-in [:broker-config :on-delivery-complete] delivery-callback))
           {:keys [client] :as mqtt} (init-key config)
           payload (nippy/freeze payload)
@@ -113,7 +121,7 @@
           consumed-messages-before @consumed-messages
           tag (core/subscribe! client topic subscribe-opts consuming-callback)]
       (core/publish! client topic payload publish-opts)
-         ;; Let the broker route the messages to the consumers and receive the messages locally
+      ;; Let the broker route the messages to the consumers and receive the messages locally
       (Thread/sleep 250)
       (is (and (> @published-messages published-messages-before)
                (> @consumed-messages consumed-messages-before)))

@@ -60,10 +60,18 @@
 (def ssl-config
   {:port (System/getenv "AMQP_TESTS_SSL_PORT")
    :tls-version (System/getenv "AMQP_TESTS_SSL_TLS_VERSION")
-   :ca-crt-file (System/getenv "AMQP_TESTS_SSL_CA_CRT_FILE")
-   :crt-file (System/getenv "AMQP_TESTS_SSL_CRT_FILE")
-   :key-file (System/getenv "AMQP_TESTS_SSL_KEY_FILE")
-   :key-password (System/getenv "AMQP_TESTS_SSL_KEY_PASSWORD")})
+   :custom-ssl-context? (= "true" (System/getenv "AMQP_TESTS_CUSTOM_SSL_CONTEXT"))
+   :ssl-context {:ca-crt-file (System/getenv "AMQP_TESTS_SSL_CA_CRT_FILE")
+                 :crt-file (System/getenv "AMQP_TESTS_SSL_CRT_FILE")
+                 :key-file (System/getenv "AMQP_TESTS_SSL_KEY_FILE")
+                 :key-password (System/getenv "AMQP_TESTS_SSL_KEY_PASSWORD")}})
+
+(def base+ssl-config
+  (cond-> (-> base-config
+              (assoc-in [:broker-config :transport] :ssl)
+              (assoc-in [:broker-config :port] (:port ssl-config)))
+    (:custom-ssl-context? ssl-config)
+    (assoc :ssl-config (:ssl-context ssl-config))))
 
 (defmulti prepare-listener
   (fn [_config listener]
@@ -132,68 +140,65 @@
   (ig/init-key :dev.gethop.pubsub/amqp config))
 
 (deftest conn-test
-  (testing "TCP connection is established"
-    (let [config base-config
-          {:keys [client] :as amqp} (init-key config)]
-      (is (and client (instance? dev.gethop.pubsub.amqp.PubSubAMQPClient client)))
-      (ig/halt-key! :dev.gethop.pubsub/amqp amqp)))
+  (let [conn-test-fn (fn [config]
+                       (let [{:keys [client] :as amqp} (init-key config)]
+                         (is (and client (instance? dev.gethop.pubsub.amqp.PubSubAMQPClient client)))
+                         (ig/halt-key! :dev.gethop.pubsub/amqp amqp)))]
+    (testing "TCP connection is established"
+      (if-not (= "true" (System/getenv "AMQP_TESTS_PLAIN_TCP_CONNECT"))
+        (println "Skipping plain TCP connection test, as configured via AMQP_TESTS_PLAIN_TCP_CONNECT.")
+        (conn-test-fn base-config)))
 
-  (testing "TCP connection, with listener and exception handler options, is established"
-    ;; Give the underlying client library time to close the connection
-    ;; from the previous test and fire calls to all
-    ;; listeners. Otherwise those pending listener calls will taint
-    ;; the logs we want to check in this test.
-    (Thread/sleep 250)
-    (let [event-listeners-config (into {} (map (fn [[k v]]
-                                                 [k (if (sequential? v)
-                                                      (mapv prepare-listener base-config v)
-                                                      (prepare-listener base-config v))]))
-                                       event-listeners)
-          config (-> base-config
-                     (assoc-in [:broker-config :listeners] event-listeners-config))
-          {:keys [client logger] :as amqp} (init-key config)]
-      (is (and client (instance? dev.gethop.pubsub.amqp.PubSubAMQPClient client)))
-      (ig/halt-key! :dev.gethop.pubsub/amqp amqp)
-      ;; Give the underlying client library time to close the
-      ;; connection and fire calls to all listeners, before checking
-      ;; the logs. Otherwise we may miss some log entries.
+    (testing "SSL connection is established"
+      (conn-test-fn base+ssl-config))
+
+    (testing "Connection, with listener and exception handler options, is established"
+      ;; Give the underlying client library time to close the connection
+      ;; from the previous test and fire calls to all
+      ;; listeners. Otherwise those pending listener calls will taint
+      ;; the logs we want to check in this test.
       (Thread/sleep 250)
-      (is (some (fn [[level _ _ _ event data]]
-                  (and (= level :info)
-                       (= event ::shutdown-listener)
-                       (= data {:root-cause :amqp-method-executed,
-                                :amqp-method-name "connection.close"})))
-                @(:logs logger)))))
+      (let [event-listeners-config (into {} (map (fn [[k v]]
+                                                   [k (if (sequential? v)
+                                                        (mapv prepare-listener base-config v)
+                                                        (prepare-listener base-config v))]))
+                                         event-listeners)
+            config (-> base+ssl-config
+                       (assoc-in [:broker-config :listeners] event-listeners-config))
+            {:keys [client logger] :as amqp} (init-key config)]
+        (is (and client (instance? dev.gethop.pubsub.amqp.PubSubAMQPClient client)))
+        (ig/halt-key! :dev.gethop.pubsub/amqp amqp)
+        ;; Give the underlying client library time to close the
+        ;; connection and fire calls to all listeners, before checking
+        ;; the logs. Otherwise we may miss some log entries.
+        (Thread/sleep 250)
+        (is (some (fn [[level _ _ _ event data]]
+                    (and (= level :info)
+                         (= event ::shutdown-listener)
+                         (= data {:root-cause :amqp-method-executed,
+                                  :amqp-method-name "connection.close"})))
+                  @(:logs logger)))))
 
-  (testing "SSL connection is established"
-    (let [config (-> base-config
-                     (assoc-in [:broker-config :transport] :ssl)
-                     (assoc-in [:broker-config :port] (:port ssl-config))
-                     (assoc :ssl-config ssl-config))
-          {:keys [client] :as amqp} (init-key config)]
-      (is (and client (instance? dev.gethop.pubsub.amqp.PubSubAMQPClient client)))
-      (ig/halt-key! :dev.gethop.pubsub/amqp amqp)))
-
-  (testing "Connection establish attempt retries on failure"
-    (let [max-retries 1    ;; It means try once and then retry once.
-          backoff-ms [1 2] ;; Wait 1 ms between retries, with a max of 2 ms.
-          config (-> base-config
-                     (assoc-in [:broker-config :host] "doesn-exist.invalid")
-                     (assoc :max-retries max-retries)
-                     (assoc :backoff-ms backoff-ms))
-          {:keys [client logger]} (init-key config)
-          logs (:logs logger)]
-      (is (and (nil? client)
-               (= max-retries
-                  (count
-                   (filter
-                    #(= (nth % 4) ;; Each log's fifth element is a log info.
-                        :dev.gethop.pubsub.amqp/retrying-connection-attempt)
-                    @logs))))))))
+    (testing "Connection establish attempt retries on failure"
+      (let [max-retries 1    ;; It means try once and then retry once.
+            backoff-ms [1 2] ;; Wait 1 ms between retries, with a max of 2 ms.
+            config (-> base+ssl-config
+                       (assoc-in [:broker-config :host] "doesn-exist.invalid")
+                       (assoc :max-retries max-retries)
+                       (assoc :backoff-ms backoff-ms))
+            {:keys [client logger]} (init-key config)
+            logs (:logs logger)]
+        (is (and (nil? client)
+                 (= max-retries
+                    (count
+                     (filter
+                      #(= (nth % 4) ;; Each log's fifth element is a log info.
+                          :dev.gethop.pubsub.amqp/retrying-connection-attempt)
+                      @logs)))))))))
 
 (deftest publish-test
   (testing "Publishing to a queue with no consumers, message counts increases"
-    (let [config base-config
+    (let [config base+ssl-config
           {:keys [client] :as amqp} (init-key config)
           channel (:channel client)]
       (lq/declare channel queue queue-attrs)
@@ -211,7 +216,7 @@
 
 (deftest subscribe-and-consume-test
   (testing "Consuming messages from a queue decreases queue's message count"
-    (let [config base-config
+    (let [config base+ssl-config
           {:keys [client] :as amqp} (init-key config)
           channel (:channel client)]
       (lq/declare channel queue queue-attrs)
